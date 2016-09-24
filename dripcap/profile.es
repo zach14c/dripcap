@@ -74,6 +74,7 @@ export default class Profile {
       "package-registry": 'dripcap.org',
       startupDialog: true
     });
+    this._config.set('package-registry', 'dripcap.org');
 
     this._packages = {};
 

@@ -10,6 +10,8 @@ curl.exe -s -S -k -L -O $url
 Expand-Archive -Path .\v8-windows-amd64.zip -DestinationPath $env:HOMEPATH -Force
 Expand-Archive -Path .\rocksdb-windows-amd64.zip -DestinationPath $env:HOMEPATH -Force
 
+Copy-Item -Path ../dripcap -Destination ../dripcap2 -Recurse
+
 $env:NOWINPCAP = "1"
 Install-Product node ''
 npm config set loglevel error
