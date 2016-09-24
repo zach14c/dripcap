@@ -17,6 +17,10 @@ sudo dpkg -i --force-overwrite v8-linux-amd64.deb
 wget `curl https://api.github.com/repos/dripcap/librocksdb/releases | jq -r '(.[0].assets[] | select(.name == "rocksdb-linux-amd64.deb")).browser_download_url'`
 sudo dpkg -i rocksdb-linux-amd64.deb
 
+export ELECTRON_VERSION=`jq .devDependencies.electron package.json -r`
+echo $ELECTRON_VERSION
+npm install --depth 0 -g electron@${ELECTRON_VERSION}
+
 export GOPATH=/home/travis/gopath
 export GOBIN=/home/travis/gopath/bin
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin

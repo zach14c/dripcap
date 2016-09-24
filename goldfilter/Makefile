@@ -52,5 +52,5 @@ DEPS := $(patsubst %.cpp,%.d, $(SOURCE))
 %.d:%.cpp
 	@$(CXX) $(CXXFLAGS) -MF"$@" -MG -MM -MP -MT"$@" -MT"$(<:.cpp=.o)" "$<"
 
--include $(DEPS)
+sinclude $(DEPS)
 endif
