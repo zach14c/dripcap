@@ -8,7 +8,7 @@ import tar from 'tar';
 import url from 'url';
 import dns from 'dns';
 import request from 'request';
-import rmdir from 'rmdir';
+import rimraf from 'rimraf';
 import _ from 'underscore';
 
 import PubSub from './pubsub';
@@ -202,7 +202,7 @@ export default class PackageInterface extends PubSub {
   uninstall(name) {
     let pkgpath = path.join(config.userPackagePath, name);
     return new Promise(res => {
-      rmdir(pkgpath, err => {
+      rimraf(pkgpath, err => {
         this.updatePackageList();
         if (err != null) {
           throw err;

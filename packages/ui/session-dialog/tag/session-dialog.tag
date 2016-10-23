@@ -4,7 +4,7 @@
     <h2>New session</h2>
     <p>
       <select name="interface">
-        <option each={ parent.interfaceList } if={ link===1 } value={ encodeURI(name) }>{ name }</option>
+        <option each={ parent.interfaceList } if={ link===1 } value={ encodeURI(id) }>{ name }</option>
       </select>
     </p>
     <p>
@@ -60,17 +60,12 @@
           PubSub.pub('core:capturing-status', stat);
         });
         sess.on('log', log => {
-          for (let msg of log) {
-            let level = ['debug', 'debug', 'debug', 'info', 'warn', 'error', 'error'][msg.level];
-            PubSub.pub('core:log', {
-              level: level,
-              message: msg.message,
-              timestamp: new Date(msg.time * 1000)
-            });
-          }
-        });
-        sess.on('packet', pkt => {
-          PubSub.pub('core:session-packet', pkt);
+          PubSub.pub('core:log', {
+            level: log.level,
+            message: log.message,
+            timestamp: new Date(),
+            data: log.data
+          });
         });
         if (Session.list != null) {
           for (let i = 0; i < Session.list.length; i++) {

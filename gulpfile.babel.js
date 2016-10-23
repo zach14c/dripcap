@@ -31,7 +31,7 @@ gulp.task('mocha', () => {
       require: ['babel-register'],
       timeout: 30000,
       slow: 10000,
-      retries: 3
+      retries: 1
     }))
     .once('error', () => {
       process.exit(1);
@@ -64,7 +64,7 @@ gulp.task('copypkg', () =>
   gulp.src([
     './packages/**/*',
     './dripcap/**/*',
-    './goldfilter/**/*'
+    './paperfilter/**/*'
   ], {
     base: './'
   })
@@ -80,7 +80,7 @@ gulp.task('npm', ['copypkg'], async function() {
 
   await new Promise(function(res) {
     npm.prefix = './.build/';
-    return npm.commands.uninstall(['dripcap', 'goldfilter'], res);
+    return npm.commands.uninstall(['dripcap'], res);
   });
 
   await new Promise(function(res) {
@@ -103,7 +103,7 @@ gulp.task('npm', ['copypkg'], async function() {
 
   await new Promise(function(res) {
     rimraf('./.build/dripcap', () => {
-      rimraf('./.build/goldfilter', res);
+      rimraf('./.build/paperfilter', res);
     });
   });
 });
@@ -131,12 +131,6 @@ gulp.task('debian-pkg', cb =>
 
 );
 
-gulp.task('debian-goldfilter', cb =>
-  gulp.src('./.build/node_modules/goldfilter/build/goldfilter')
-  .pipe(gulp.dest('./.debian/usr/bin/'))
-  .pipe(preservetime())
-);
-
 gulp.task('debian-bin', ['copy', 'babel', 'copypkg', 'npm'], cb =>
   gulp.src('./.build/**')
   .pipe(electron({
@@ -151,8 +145,7 @@ gulp.task('debian-bin', ['copy', 'babel', 'copypkg', 'npm'], cb =>
 
 gulp.task('debian', sequence(
   'debian-bin',
-  'debian-pkg',
-  'debian-goldfilter'
+  'debian-pkg'
 ));
 
 gulp.task('darwin', ['build'], cb => {

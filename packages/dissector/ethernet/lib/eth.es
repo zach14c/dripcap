@@ -1,49 +1,36 @@
-import {
-  Layer,
-  Buffer
-} from 'dripcap';
-import MACAddress from 'dripcap/mac';
-import EthEnum from 'dripcap/eth/type';
+import {Layer, Item, Value} from 'dripcap';
+import {Enum} from 'dripcap/utils';
+import {MACAddress} from 'dripcap/mac';
 
-export default class EthrenetDissector {
-  constructor(options) {}
-
+export default class Dissector {
   analyze(packet, parentLayer) {
-    function assertLength(len) {
-      if (parentLayer.payload.length < len) {
-        throw new Error('too short frame');
-      }
-    }
-
-    let layer = new Layer();
+    let layer = new Layer('::Ethernet');
     layer.name = 'Ethernet';
-    layer.namespace = '::Ethernet';
+    layer.alias = 'eth';
 
-    assertLength(6);
-    let destination = parentLayer.payload.slice(0, 6);
-    layer.fields.push({
-      name: 'MAC destination',
-      attr: 'dst',
-      data: destination
+    let destination = MACAddress(parentLayer.payload.slice(0, 6));
+    layer.addItem({
+      name: 'Destination',
+      value: destination,
+      range: '0:6'
     });
-    layer.attrs.dst = new MACAddress(destination);
+    layer.setAttr('dst', destination);
 
-    assertLength(12);
-    let source = parentLayer.payload.slice(6, 12)
-    layer.fields.push({
-      name: 'MAC source',
-      attr: 'src',
-      data: source
+    let source = MACAddress(parentLayer.payload.slice(6, 12));
+    layer.addItem({
+      name: 'Source',
+      value: source,
+      range: '6:12'
     });
-    layer.attrs.src = new MACAddress(source);
+    layer.setAttr('src', source);
 
-    assertLength(14);
-    let type = parentLayer.payload.readUInt16BE(12, true);
+    let protocolName;
+    let type = parentLayer.payload.readUInt16BE(12);
     if (type <= 1500) {
-      layer.fields.push({
+      layer.addItem({
         name: 'Length',
-        value: type,
-        data: parentLayer.payload.slice(12, 14)
+        value: new Value(type),
+        range: '12:14'
       });
     } else {
       let table = {
@@ -55,31 +42,33 @@ export default class EthrenetDissector {
         0x86DD: 'IPv6'
       };
 
-      let etherType = new EthEnum(parentLayer.payload.readUInt16BE(12, true));
-
-      layer.fields.push({
+      let etherType = Enum(table, type);
+      layer.addItem({
         name: 'EtherType',
-        attr: 'etherType',
-        data: parentLayer.payload.slice(12, 14)
+        value: etherType,
+        range: '12:14'
       });
-      layer.attrs.etherType = etherType;
+      layer.setAttr('etherType', etherType);
 
-      if (etherType.known) {
-        layer.namespace = `::Ethernet::<${etherType.name}>`;
+      protocolName = table[type];
+      if (protocolName != null) {
+        layer.namespace = `::Ethernet::<${protocolName}>`;
       }
     }
 
-    layer.payload = parentLayer.payload.slice(14);
+    layer.summary = `${source.data} -> ${destination.data}`;
+    if (protocolName != null) {
+      layer.summary = `[${protocolName}] ` + layer.summary;
+    }
 
-    layer.fields.push({
+    layer.range = '14:';
+    layer.payload = parentLayer.payload.slice(14);
+    layer.addItem({
       name: 'Payload',
-      value: layer.payload,
-      data: layer.payload
+      value: new Value(layer.payload),
+      range: '14:'
     });
 
-    layer.summary = (layer.attrs.etherType) ? `[${layer.attrs.etherType.name}] ${layer.attrs.src} -> ${layer.attrs.dst}` :
-      `${layer.attrs.src} -> ${layer.attrs.dst}`;
-
-    parentLayer.layers[layer.namespace] = layer;
+    return [layer];
   }
-}
+};

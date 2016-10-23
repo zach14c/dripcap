@@ -123,9 +123,6 @@ export default class PcapFile {
     sess.on('status', stat => {
       PubSub.pub('core:capturing-status', stat);
     });
-    sess.on('packet', pkt => {
-      PubSub.pub('core:session-packet', pkt);
-    });
     if (Session.list != null) {
       for (let i = 0; i < Session.list.length; i++) {
         let s = Session.list[i];

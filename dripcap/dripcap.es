@@ -1,7 +1,6 @@
 import config from './config';
 import $ from 'jquery';
 import less from 'less';
-import GoldFilter from 'goldfilter';
 import {
   EventEmitter
 } from 'events';
@@ -22,7 +21,6 @@ class Dripcap extends EventEmitter {
   constructor(profile) {
     super();
     this.profile = profile;
-    this.gold = new GoldFilter();
   }
 
   _init() {

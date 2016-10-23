@@ -25,14 +25,23 @@ export default class BinaryView {
       ulascii.empty();
     });
 
-    PubSub.sub('packet-view:range', function(range) {
+    PubSub.sub('packet-view:range', function(array) {
       ulhex.find('i').removeClass('selected');
-      let r = ulhex.find('i').slice(range[0], range[1]);
-      r.addClass('selected');
-
       ulascii.find('i').removeClass('selected');
-      r = ulascii.find('i').slice(range[0], range[1]);
-      r.addClass('selected');
+      if (array.length > 0) {
+        let range = [0, ulascii.find('i').length];
+        for (let r of array) {
+          if (r !== '') {
+            let n = r.split(':');
+            n[0] = (n[0] === '') ? 0 : parseInt(n[0]);
+            n[1] = (n[1] === '') ? range[1] : parseInt(n[1]);
+            range[0] = Math.min(range[0] + n[0], range[1]);
+            range[1] = Math.min(range[0] + (n[1] - n[0]), range[1]);
+          }
+        }
+        ulhex.find('i').slice(range[0], range[1]).addClass('selected');
+        ulascii.find('i').slice(range[0], range[1]).addClass('selected');
+      }
     });
 
     PubSub.sub('packet-list-view:select', (pkt) => {

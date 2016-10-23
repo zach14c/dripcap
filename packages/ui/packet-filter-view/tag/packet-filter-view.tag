@@ -36,7 +36,7 @@
     };
 
     Session.on('created', session => {
-      PubSub.sub('packet-filter-view:filter', filter => session.setFilter('main', filter));
+      PubSub.sub('packet-filter-view:filter', filter => session.filter('main', filter));
     });
   </script>
 </packet-filter-view>

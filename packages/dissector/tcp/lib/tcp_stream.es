@@ -1,31 +1,33 @@
-import {
-  PacketStream
-} from 'dripcap';
+import {Layer, Value, StreamChunk} from 'dripcap';
 
-export default class TCPStreamDissector {
-  constructor(options) {
+export default class Dissector {
+  constructor() {
     this.seq = -1;
     this.length = 0;
   }
+  analyze(packet, parentLayer, chunk) {
 
-  analyze(packet, layer, data, output) {
-    if (layer.payload.length > 0) {
-      let stream = new PacketStream('TCP Stream', layer.namespace, layer.attrs.src + '/' + layer.attrs.dst);
+    if (parentLayer.payload.length > 0) {
+      let ns = chunk.namespace.replace('<TCP>', 'TCP');
+      let stream = new StreamChunk(ns, chunk.id, parentLayer);
+      let payload = chunk.attr('payload').data;
+      let seq = chunk.attr('seq').data;
 
       if (this.seq < 0) {
-        this.length += layer.payload.length;
-        stream.data = layer.payload;
+        this.length += payload.length;
+        stream.setAttr('payload', new Value(payload));
       } else {
         let start = this.seq + this.length;
-        let length = layer.payload.length;
-        if (start > layer.attrs.seq) {
-          length -= (start - layer.attrs.seq);
+        let length = payload.length;
+        if (start > seq) {
+          length -= (start - seq);
         }
         this.length += length;
-        stream.data = layer.payload;
+        stream.setAttr('payload', new Value(payload));
       }
-      this.seq = layer.attrs.seq;
-      output.push(stream);
+      this.seq = seq;
+      return [stream];
     }
+
   }
-}
+};

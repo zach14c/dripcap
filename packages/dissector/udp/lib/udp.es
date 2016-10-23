@@ -1,90 +1,65 @@
-import {
-  Layer,
-  Buffer
-} from 'dripcap';
-import IPv4Host from 'dripcap/ipv4/host';
-import IPv6Host from 'dripcap/ipv6/host';
+import {Layer, Item, Value} from 'dripcap';
+import {IPv4Host} from 'dripcap/ipv4';
+import {IPv6Host} from 'dripcap/ipv6';
 
 export default class UDPDissector {
   constructor(options) {}
 
   analyze(packet, parentLayer) {
-    function assertLength(len) {
-      if (parentLayer.payload.length < len) {
-        throw new Error('too short frame');
-      }
-    }
-
-    let layer = new Layer();
+    let layer = new Layer(parentLayer.namespace.replace('<UDP>', 'UDP'));
     layer.name = 'UDP';
-    layer.namespace = parentLayer.namespace.replace('<UDP>', 'UDP');
+    layer.alias = 'udp';
 
-    try {
+    let source = parentLayer.payload.readUInt16BE(0);
+    layer.addItem({
+      name: 'Source port',
+      value: new Value(source),
+      range: '0:2'
+    });
 
-      assertLength(2);
-      let source = parentLayer.payload.readUInt16BE(0, true)
-      layer.fields.push({
-        name: 'Source port',
-        value: source,
-        data: parentLayer.payload.slice(0, 2)
-      });
+    let destination = parentLayer.payload.readUInt16BE(2);
+    layer.addItem({
+      name: 'Destination port',
+      value: new Value(destination),
+      range: '2:4'
+    });
 
-      let srcAddr = parentLayer.attrs.src;
-
-      if (srcAddr.constructor.name === 'IPv4Address') {
-        layer.attrs.src = new IPv4Host(srcAddr, source);
-      } else {
-        layer.attrs.src = new IPv6Host(srcAddr, source);
-      }
-
-      assertLength(4);
-      let destination = parentLayer.payload.readUInt16BE(2, true);
-      layer.fields.push({
-        name: 'Destination port',
-        value: destination,
-        data: parentLayer.payload.slice(2, 4)
-      });
-
-      let dstAddr = parentLayer.attrs.dst;
-      if (dstAddr.constructor.name === 'IPv4Address') {
-        layer.attrs.dst = new IPv4Host(dstAddr, destination);
-      } else {
-        layer.attrs.dst = new IPv6Host(dstAddr, destination);
-      }
-
-      assertLength(6);
-      let length = parentLayer.payload.readUInt16BE(4, true)
-      layer.fields.push({
-        name: 'Length',
-        attr: 'length',
-        data: parentLayer.payload.slice(4, 6)
-      });
-      layer.attrs.length = length;
-
-      assertLength(8);
-      let checksum = parentLayer.payload.readUInt16BE(6, true)
-      layer.fields.push({
-        name: 'Checksum',
-        attr: 'checksum',
-        data: parentLayer.payload.slice(6, 8)
-      });
-      layer.attrs.checksum = checksum;
-
-      assertLength(length);
-      layer.payload = parentLayer.payload.slice(8, length);
-
-      layer.fields.push({
-        name: 'Payload',
-        value: layer.payload,
-        data: layer.payload
-      });
-
-      layer.summary = `${layer.attrs.src} -> ${layer.attrs.dst}`;
-
-    } catch (err) {
-      layer.error = err.message;
+    let srcAddr = parentLayer.attr('src');
+    let dstAddr = parentLayer.attr('dst');
+    if (srcAddr.type === 'dripcap/ipv4/addr') {
+      layer.setAttr('src', IPv4Host(srcAddr.data, source));
+      layer.setAttr('dst', IPv4Host(dstAddr.data, destination));
+    } else if (srcAddr.type === 'dripcap/ipv6/addr') {
+      layer.setAttr('src', IPv6Host(srcAddr.data, source));
+      layer.setAttr('dst', IPv6Host(dstAddr.data, destination));
     }
 
-    parentLayer.layers[layer.namespace] = layer;
+    let length = new Value(parentLayer.payload.readUInt16BE(4));
+    layer.addItem({
+      name: 'Length',
+      value: length,
+      range: '4:6'
+    });
+    layer.setAttr('length', length);
+
+    let checksum = new Value(parentLayer.payload.readUInt16BE(6));
+    layer.addItem({
+      name: 'Checksum',
+      value: checksum,
+      range: '6:8'
+    });
+    layer.setAttr('checksum', checksum);
+
+    layer.range = '8:'+ length.data;
+    layer.payload = parentLayer.payload.slice(8, length.data);
+
+    layer.addItem({
+      name: 'Payload',
+      value: new Value(layer.payload),
+      range: '8:' + length.data
+    });
+
+    layer.summary = `${layer.attr('src').data} -> ${layer.attr('dst').data}`;
+    return [layer];
   }
 }

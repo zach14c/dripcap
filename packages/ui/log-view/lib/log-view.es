@@ -68,8 +68,9 @@ export default class LogView {
       let hours = ('0' + log.timestamp.getHours()).slice(-2);
       let minutes = ('0' + log.timestamp.getMinutes()).slice(-2);
       let seconds = ('0' + log.timestamp.getSeconds()).slice(-2);
-      let date = `[${hours}:${minutes}:${seconds}]`;
-      this.list.append($('<li>').addClass(textClass).append($('<span>').text(date)).append(document.createTextNode(log.message)));
+      log.date = `${hours}:${minutes}:${seconds}`;
+      this.view.logs.push(log);
+      this.view.update();
     });
 
     Logger.info('log-view loaded');

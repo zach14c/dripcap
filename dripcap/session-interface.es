@@ -1,8 +1,8 @@
 import {
   EventEmitter
 } from 'events';
-import Session from './session';
 import config from './config';
+import {Session} from 'paperfilter';
 
 export default class SessionInterface extends EventEmitter {
   constructor(parent) {
@@ -11,82 +11,55 @@ export default class SessionInterface extends EventEmitter {
     this.list = [];
     this._dissectors = [];
     this._streamDissectors = [];
-    this._classes = [];
   }
 
-  getInterfaceList() {
-    return this.parent.gold.devices();
+  async getInterfaceList() {
+    return Session.devices;
   }
 
-  registerDissector(namespaces, path) {
+  registerDissector(namespaces, script) {
     return this._dissectors.push({
       namespaces,
-      path
+      script
     });
   }
 
-  registerStreamDissector(namespaces, path) {
+  registerStreamDissector(namespaces, script) {
     return this._streamDissectors.push({
       namespaces,
-      path
+      script
     });
   }
 
-  registerClass(name, path) {
-    return this._classes.push({
-      name,
-      path
-    });
-  }
-
-  unregisterDissector(path) {
-    let index = this._dissectors.find(e => e.path === path);
+  unregisterDissector(script) {
+    let index = this._dissectors.find(e => e.path === script);
     if (index != null) {
       return this._dissectors.splice(index, 1);
     }
   }
 
-  unregisterStreamDissector(path) {
-    let index = this._streamDissectors.find(e => e.path === path);
+  unregisterStreamDissector(script) {
+    let index = this._streamDissectors.find(e => e.path === script);
     if (index != null) {
       return this._streamDissectors.splice(index, 1);
     }
   }
 
-  unregisterClass(path) {
-    let index = this._classes.find(e => e.path === path);
-    if (index != null) {
-      return this._classes.splice(index, 1);
-    }
-  }
-
   async create(iface = '', options = {}) {
-    let sess = new Session(config.filterPath);
-    if (iface.length > 0) {
-      sess.addCapture(iface, options);
-    }
+    let option = {
+      namespace: '::<Ethernet>',
+      dissectors: this._dissectors,
+      stream_dissectors: this._streamDissectors
+    };
 
-    let tasks = [];
-    for (let i = 0; i < this._classes.length; i++) {
-      let cls = this._classes[i];
-      ((cls = cls) => tasks.push(sess.addClass(cls.name, cls.path)))(cls);
-    }
+    let sess = await Session.create(option);
+    sess.interface = iface;
 
-    await Promise.all(tasks);
-    for (let j = 0; j < this._dissectors.length; j++) {
-      var dec = this._dissectors[j];
-      ((dec = dec) => tasks.push(sess.addDissector(dec.namespaces, dec.path)))(dec);
-    }
-    for (let k = 0; k < this._streamDissectors.length; k++) {
-      var dec = this._streamDissectors[k];
-      ((dec = dec) => tasks.push(sess.addStreamDissector(dec.namespaces, dec.path)))(dec);
-    }
-
-    await Promise.all(tasks);
     this.parent.pubsub.pub('core:capturing-settings', {
       iface,
       options
     });
+
     return sess;
   }
 }

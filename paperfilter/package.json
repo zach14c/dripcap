@@ -1,0 +1,27 @@
+{
+  "name": "paperfilter",
+  "version": "0.0.1",
+  "description": "paperfilter",
+  "main": "index.js",
+  "dependencies": {
+    "bindings": "~1.2.1",
+    "esprima": "^3.1.0",
+    "rollup": "^0.36.3",
+    "rollup-plugin-commonjs": "^5.0.5",
+    "rollup-plugin-node-resolve": "^2.0.0"
+  },
+  "scripts": {
+    "install": "make",
+    "test": "mocha"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dripcap/paperfilter.git"
+  },
+  "gypfile": true,
+  "devDependencies": {
+    "nan": "^2.4.0",
+    "msgpack-lite": "^0.1.26"
+  }
+}

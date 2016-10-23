@@ -38,17 +38,17 @@ export default class PacketListView {
     this.view.scroll(_.debounce((() => this.update()), 100));
 
     PubSub.sub('core:session-packet', pkt => {
-      if (pkt.id === this.selectedId) {
+      if (pkt.seq === this.selectedId) {
         PubSub.pub('packet-list-view:select', pkt);
       }
       process.nextTick(() => {
-        this.cells.filter(`[data-packet=${pkt.id}]:visible`)
+        this.cells.filter(`[data-packet=${pkt.seq}]:visible`)
           .empty()
           .append($('<a>').text(pkt.name))
-          .append($('<a>').text(pkt.attrs.src))
+          .append($('<a>').text(pkt.attrs.src.data))
           .append($('<a>').append($('<i class="fa fa-angle-double-right">')))
-          .append($('<a>').text(pkt.attrs.dst))
-          .append($('<a>').text(pkt.len));
+          .append($('<a>').text(pkt.attrs.dst.data))
+          .append($('<a>').text(pkt.length));
       });
     });
 
@@ -76,13 +76,11 @@ export default class PacketListView {
 
     PubSub.sub('core:capturing-status', n => {
       this.packets = n.packets;
-
       if (n.filtered.main != null) {
         this.filtered = n.filtered.main;
       } else {
         this.filtered = -1;
       }
-
       this.update();
     });
 
@@ -134,9 +132,8 @@ export default class PacketListView {
           }
           this.updateCells(start - 1, list);
         } else {
-          this.session.getFiltered('main', start, end).then(list => {
-            this.updateCells(start - 1, list);
-          });
+          let list = this.session.getFiltered('main', start - 1, end - 1);
+          this.updateCells(start - 1, list);
         }
       }
     }
@@ -162,7 +159,7 @@ export default class PacketListView {
           $(this).addClass('selected');
           self.selectedId = parseInt($(this).attr('data-packet'));
           process.nextTick(() => {
-            self.session.requestPackets([self.selectedId]);
+            PubSub.pub('core:session-packet', self.session.get(self.selectedId));
           });
         });
       }
@@ -178,7 +175,9 @@ export default class PacketListView {
       $(ele).attr('data-packet', id).toggleClass('selected', this.selectedId === id).empty().css('top', (32 * indices[i]) + 'px').show();
     });
 
-    this.session.requestPackets(packets);
+    for (let pkt of packets) {
+      PubSub.pub('core:session-packet', this.session.get(pkt));
+    }
   }
 
   async deactivate() {

@@ -1,9 +1,31 @@
+<packet-view-dripcap-enum>
+  <script type="babel">
+    this.on('update', () => {
+      let keys = Object.keys(opts.val).filter(k => !k.startsWith('_') && opts.val[k]);
+      this.name = keys.length > 0 ? keys.join(', ') : '[Unknown]';
+      this.value = opts.val._value;
+    });
+  </script>
+  <i>{ name } ({value}) </i>
+</packet-view-dripcap-enum>
+
+<packet-view-dripcap-flags>
+  <script type="babel">
+    this.on('update', () => {
+      let keys = Object.keys(opts.val).filter(k => !k.startsWith('_') && opts.val[k]);
+      this.name = keys.length > 0 ? keys.join(', ') : '[None]';
+      this.value = opts.val._value;
+    });
+  </script>
+  <i>{ name } ({value}) </i>
+</packet-view-dripcap-flags>
+
 <packet-view-custom-value>
   <script type="babel">
     import riot from 'riot';
     this.on('mount', () => {
       if (opts.tag != null) {
-        riot.mount(this.root, opts.tag, {value: opts.val});
+        riot.mount(this.root, opts.tag, {val: opts.val});
       }
     });
   </script>
@@ -57,10 +79,10 @@
 
 <packet-view-item>
 <li>
-  <p class="label list-item" onclick={ toggle } range={ opts.field.data.start + '-' + opts.field.data.end } oncontextmenu={ context } onmouseover={ fieldRange } onmouseout={ rangeOut }>
-    <i class="fa fa-circle-o" show={ !opts.field.fields }></i>
-    <i class="fa fa-arrow-circle-right" show={ opts.field.fields && !show }></i>
-    <i class="fa fa-arrow-circle-down" show={ opts.field.fields && show }></i>
+  <p class="label list-item" onclick={ toggle } range={ opts.field.range } oncontextmenu={ context } onmouseover={ fieldRange } onmouseout={ rangeOut }>
+    <i class="fa fa-circle-o" show={ !opts.field.children.length }></i>
+    <i class="fa fa-arrow-circle-right" show={ opts.field.children.length && !show }></i>
+    <i class="fa fa-arrow-circle-down" show={ opts.field.children.length && show }></i>
     <a class="text-label">{ opts.field.name }:</a>
     <packet-view-boolean-value if={ type=='boolean' } val={ val }></packet-view-boolean-value>
     <packet-view-integer-value if={ type=='integer' } val={ val }></packet-view-integer-value>
@@ -69,19 +91,19 @@
     <packet-view-stream-value if={ type=='stream' } val={ val }></packet-view-stream-value>
     <packet-view-custom-value if={ type=='custom' } tag={ tag } val={ val }></packet-view-custom-value>
   </p>
-  <ul show={ opts.field.fields && show }>
-    <packet-view-item each={ f in opts.field.fields } layer={ opts.layer } field={ f }></packet-view-item>
+  <ul show={ opts.field.children.length && show }>
+    <packet-view-item each={ f in opts.field.children } layer={ opts.layer } field={ f }></packet-view-item>
   </ul>
 </li>
 
 <script type="babel">
   import {remote} from 'electron';
   import {Menu} from 'dripcap';
-  import BufferStream from 'goldfilter/stream';
+  import riot from 'riot';
   this.show = false;
 
   this.toggle = e => {
-    if (opts.field.fields != null) {
+    if (opts.field.children.length) {
       this.show = !this.show;
     }
     e.stopPropagation();
@@ -102,22 +124,34 @@
 
   this.on('update', () => {
     this.layer = opts.layer;
+    this.val = opts.field.value.data;
+    this.type = null;
+    this.tag = null;
 
-    this.val = (opts.field.value != null)
-      ? opts.field.value
-      : this.layer.attrs[opts.field.attr];
+    if (opts.field.value.type !== '') {
+      let tag = 'packet-view-' + opts.field.value.type.replace(/\//g, '-');
+      try {
+        riot.render(tag, {val: this.val});
+        this.type = 'custom';
+        this.tag = tag;
+      } catch (e) {
+        // console.warn(`tag ${tag} not registered`);
+      }
+    }
 
-    return this.type = (opts.field.tag != null)
-      ? (this.tag = opts.field.tag, 'custom')
-      : typeof this.val === 'boolean'
-        ? 'boolean'
-        : Number.isInteger(this.val)
-          ? 'integer'
-          : Buffer.isBuffer(this.val)
-            ? 'buffer'
-            : BufferStream.isStream(this.val)
-              ? 'stream'
-                : 'string';
+    if (this.type == null) {
+      if (typeof this.val === 'boolean') {
+        this.type = 'boolean';
+      } else if (Number.isInteger(this.val)) {
+        this.type = 'integer';
+      } else if (Buffer.isBuffer(this.val)) {
+        this.type = 'buffer';
+      } else if (this.val && this.val.constructor.name === 'LargeBuffer') {
+        this.type = 'buffer';
+      } else {
+        this.type = 'string';
+      }
+    }
   });
 </script>
 
@@ -137,20 +171,21 @@
   <i class="text-summary">{ layer.summary }</i>
 </p>
 <ul show={ visible }>
-  <packet-view-item each={ f in layer.fields } layer={ layer } field={ f }></packet-view-item>
+  <packet-view-item each={ f in layer.items } layer={ layer } field={ f }></packet-view-item>
   <li if={ layer.error }>
     <a class="text-label">Error:</a>
     { layer.error }
   </li>
 </ul>
-<packet-view-layer each={ ns in rootKeys } layer={ rootLayers[ns] }></packet-view-layer>
+<packet-view-layer each={ ns in rootKeys } layer={ rootLayers[ns] } range={ range }></packet-view-layer>
 
 <script type="babel">
   import {remote} from 'electron';
-  import {Menu} from 'dripcap';
+  import {Menu, PubSub} from 'dripcap';
   this.visible = true;
 
   this.on('update', () => {
+    this.range = (opts.range != null) ? (opts.range + ' ' + opts.layer.range) : opts.layer.range;
     this.layer = opts.layer;
     this.rootKeys = [];
     if (this.layer.layers != null) {
@@ -165,11 +200,22 @@
     e.stopPropagation();
   };
 
-  this.rangeOut = () => this.parent.rangeOut();
+  this.rangeOut = e => {
+    PubSub.pub('packet-view:range', []);
+  }
 
-  this.fieldRange = e => this.parent.fieldRange(e);
+  this.fieldRange = e => {
+    let range = this.range.split(' ');
+    range.pop();
+    range = range.concat(e.currentTarget.getAttribute('range').split(' '));
+    PubSub.pub('packet-view:range', range);
+  }
 
-  this.layerRange = e => this.parent.layerRange(e);
+  this.layerRange = e => {
+    let range = this.range.split(' ');
+    range.pop();
+    PubSub.pub('packet-view:range', range);
+  }
 
   this.toggleLayer = e => {
     this.visible = !this.visible;
@@ -202,7 +248,7 @@
       <a class="text-label">
         Actual Length:
       </a>
-      <i>{ packet.len }</i>
+      <i>{ packet.length }</i>
     </li>
   <li if={ packet.caplen < packet.length }> <i class="fa fa-exclamation-circle text-warn"> This packet has been truncated.</i> </li> </ul> <packet-view-layer each={ ns in rootKeys } layer={ rootLayers[ns] }></packet-view-layer>
 </div>
@@ -217,43 +263,6 @@
       this.rootLayers = this.packet.layers;
       this.rootKeys = Object.keys(this.rootLayers);
     }
-  };
-
-  this.fieldRange = e => {
-    let fieldRange = e.currentTarget.getAttribute('range').split('-');
-    let range = [
-      parseInt(fieldRange[0]),
-      parseInt(fieldRange[1])
-    ];
-    PubSub.pub('packet-view:range', range);
-  };
-
-  this.layerRange = e => {
-    let find = function (layer, ns) {
-      if (layer.layers != null) {
-        for (var k in layer.layers) {
-          var v = layer.layers[k];
-          if (k === ns) {
-            return layer;
-          }
-        }
-        for (k in layer.layers) {
-          var v = layer.layers[k];
-          let r = find(v, ns);
-          if (r != null) {
-            return r;
-          }
-        }
-      }
-    };
-
-    let layer = find(this.packet, e.item.ns);
-    let range = [layer.payload.start, layer.payload.end];
-    PubSub.pub('packet-view:range', range);
-  };
-
-  this.rangeOut = () => {
-    PubSub.pub('packet-view:range', [0, 0]);
   };
 </script>
 

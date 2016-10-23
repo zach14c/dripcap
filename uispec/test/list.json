@@ -1,0 +1,16 @@
+[
+ {
+    "id":"eth0",
+    "name":"eth0",
+    "description":"",
+    "link":1,
+    "loopback":false
+ },
+  {
+     "id":"lo",
+     "name":"lo",
+     "description":"",
+     "link":1,
+     "loopback":true
+  }
+]
