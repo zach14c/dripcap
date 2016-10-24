@@ -24,6 +24,7 @@ export default class MainMenu {
     KeyBind.bind('command+shift+w', '!menu', 'core:close-window');
     KeyBind.bind('command+q', '!menu', 'core:quit');
     KeyBind.bind('command+,', '!menu', 'core:preferences');
+    KeyBind.bind('f5', '!menu', 'core:reload');
     KeyBind.bind('command+shift+i', '!menu', 'core:toggle-devtools');
     KeyBind.bind('command+m', '!menu', 'core:window-minimize');
     KeyBind.bind('command+alt+ctrl+m', '!menu', 'core:window-zoom');
@@ -119,6 +120,11 @@ export default class MainMenu {
     };
 
     this.devMenu = function(menu, e) {
+      menu.append(new MenuItem({
+        label: 'Reload',
+        accelerator: KeyBind.get('!menu', 'core:reload'),
+        click: action('core:reload')
+      }));
       menu.append(new MenuItem({
         label: 'Toggle DevTools',
         accelerator: KeyBind.get('!menu', 'core:toggle-devtools'),
@@ -230,6 +236,7 @@ export default class MainMenu {
     KeyBind.unbind('command+shift+w', '!menu', 'core:close-window');
     KeyBind.unbind('command+q', '!menu', 'core:quit');
     KeyBind.unbind('command+,', '!menu', 'core:preferences');
+    KeyBind.unbind('f5', '!menu', 'core:reload');
     KeyBind.unbind('command+shift+i', '!menu', 'core:toggle-devtools');
     KeyBind.unbind('command+m', '!menu', 'core:window-minimize');
     KeyBind.unbind('command+alt+ctrl+i', '!menu', 'core:window-zoom');
