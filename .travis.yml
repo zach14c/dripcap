@@ -16,6 +16,7 @@ addons:
     - alien
     - libcap-dev
     - jq
+    - chrpath
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source travis/linux-before-install.sh
   ; fi

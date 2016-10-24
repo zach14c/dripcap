@@ -1,3 +1,2 @@
 #!/bin/sh
-patchelf --set-rpath '$ORIGIN:$ORIGIN/lib/:/usr/share/dripcap' /usr/share/dripcap/dripcap
 setcap cap_net_raw,cap_net_admin=eip /usr/share/dripcap/dripcap

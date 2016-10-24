@@ -5,7 +5,7 @@ Maintainer: h2so5 <mail@h2so5.net>
 Section: net
 Priority: optional
 Installed-Size: 347000
-Depends: patchelf, libcap2-bin
+Depends: libcap2-bin
 Vcs-Git: git://github.com/dripcap/dripcap.git
 Vcs-browser: http://github.com/dripcap/dripcap
 Homepage: https://dripcap.org

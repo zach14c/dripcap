@@ -10,8 +10,7 @@
   "readme": "see README.md",
   "main": "js/main.js",
   "scripts": {
-    "test": "gulp mocha",
-    "dpkg": "chmod -R g-w debian && gulp debian && cd .debian && fakeroot dpkg-deb --build . ../dripcap-linux-amd64.deb"
+    "test": "gulp mocha"
   },
   "author": "h2so5",
   "license": "MIT",
