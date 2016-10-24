@@ -4,7 +4,7 @@ import {
 
 export default class IPv4 {
   activate() {
-    Session.registerDissector(['::Ethernet::<IPv4>'], `${__dirname}/ipv4.es`);
+    Session.registerDissector(`${__dirname}/ipv4.es`);
   }
 
   deactivate() {

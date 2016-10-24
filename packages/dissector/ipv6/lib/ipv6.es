@@ -3,7 +3,9 @@ import {Flags, Enum} from 'dripcap/utils';
 import {IPv6Address} from 'dripcap/ipv6';
 
 export default class IPv6Dissector {
-  constructor(options) {}
+  static get namespaces() {
+    return ['::Ethernet::<IPv6>'];
+  }
 
   analyze(packet, parentLayer) {
     let layer = new Layer('::Ethernet::IPv6');

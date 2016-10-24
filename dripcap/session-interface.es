@@ -17,16 +17,14 @@ export default class SessionInterface extends EventEmitter {
     return Session.devices;
   }
 
-  registerDissector(namespaces, script) {
+  registerDissector(script) {
     return this._dissectors.push({
-      namespaces,
       script
     });
   }
 
-  registerStreamDissector(namespaces, script) {
+  registerStreamDissector(script) {
     return this._streamDissectors.push({
-      namespaces,
       script
     });
   }

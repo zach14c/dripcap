@@ -3,7 +3,9 @@ import {IPv4Host} from 'dripcap/ipv4';
 import {IPv6Host} from 'dripcap/ipv6';
 
 export default class UDPDissector {
-  constructor(options) {}
+  static get namespaces() {
+    return [/::Ethernet::\w+::<UDP>/];
+  }
 
   analyze(packet, parentLayer) {
     let layer = new Layer(parentLayer.namespace.replace('<UDP>', 'UDP'));

@@ -1,10 +1,15 @@
 import {Layer, Value, StreamChunk} from 'dripcap';
 
 export default class Dissector {
+  static get namespaces() {
+    return [/::Ethernet::\w+::<TCP>/];
+  }
+
   constructor() {
     this.seq = -1;
     this.length = 0;
   }
+
   analyze(packet, parentLayer, chunk) {
 
     if (parentLayer.payload.length > 0) {

@@ -4,7 +4,7 @@ import {
 
 export default class ARP {
   activate() {
-    Session.registerDissector(['::Ethernet::<ARP>'], `${__dirname}/arp.es`);
+    Session.registerDissector(`${__dirname}/arp.es`);
   }
 
   deactivate() {

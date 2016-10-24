@@ -4,6 +4,10 @@ import {IPv4Host} from 'dripcap/ipv4';
 import {IPv6Host} from 'dripcap/ipv6';
 
 export default class Dissector {
+  static get namespaces() {
+    return [/::Ethernet::\w+::<TCP>/];
+  }
+
   analyze(packet, parentLayer) {
     let layer = new Layer(parentLayer.namespace.replace('<TCP>', 'TCP'));
     layer.name = 'TCP';

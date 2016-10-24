@@ -4,7 +4,7 @@ import {
 
 export default class IPv6 {
   activate() {
-    Session.registerDissector(['::Ethernet::<IPv6>'], `${__dirname}/ipv6.es`);
+    Session.registerDissector(`${__dirname}/ipv6.es`);
   }
 
   deactivate() {

@@ -4,7 +4,9 @@ import {IPv4Address} from 'dripcap/ipv4';
 import {MACAddress} from 'dripcap/mac';
 
 export default class ARPDissector {
-  constructor(options) {}
+  static get namespaces() {
+    return ['::Ethernet::<ARP>'];
+  }
 
   analyze(packet, parentLayer) {
 

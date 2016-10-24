@@ -4,7 +4,7 @@ import {
 
 export default class Ethernet {
   activate() {
-    Session.registerDissector(['::<Ethernet>'], `${__dirname}/eth.es`);
+    Session.registerDissector(`${__dirname}/eth.es`);
   }
 
   deactivate() {

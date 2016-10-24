@@ -1,9 +1,10 @@
 import {Layer, Value, StreamChunk, LargeBuffer} from 'dripcap';
 
 export default class Dissector {
-  constructor() {
-
+  static get namespaces() {
+    return [/::Ethernet::\w+::TCP/];
   }
+
   analyze(packet, parentLayer, chunk) {
     let payload = chunk.attr('payload').data;
     let body = payload.toString('utf8');

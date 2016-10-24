@@ -3,6 +3,10 @@ import {Enum} from 'dripcap/utils';
 import {MACAddress} from 'dripcap/mac';
 
 export default class Dissector {
+  static get namespaces() {
+    return ['::<Ethernet>'];
+  }
+
   analyze(packet, parentLayer) {
     let layer = new Layer('::Ethernet');
     layer.name = 'Ethernet';

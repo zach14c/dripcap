@@ -2,7 +2,9 @@ import {Layer, Item, Value} from 'dripcap';
 import {Flags, Enum} from 'dripcap/utils';
 
 export default class DNSDissector {
-  constructor(options) {}
+  static get namespaces() {
+    return ['::Ethernet::IPv4::UDP'];
+  }
 
   analyze(packet, parentLayer) {
     let layer = new Layer(parentLayer.namespace + '::DNS');

@@ -4,7 +4,7 @@ import {
 
 export default class UDP {
   activate() {
-    Session.registerDissector([/::Ethernet::\w+::<UDP>/], `${__dirname}/udp.es`);
+    Session.registerDissector(`${__dirname}/udp.es`);
   }
 
   deactivate() {

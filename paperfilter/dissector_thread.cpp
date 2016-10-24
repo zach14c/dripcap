@@ -12,6 +12,7 @@
 #include <unordered_set>
 #include <v8.h>
 #include <v8pp/class.hpp>
+#include <v8pp/object.hpp>
 
 using namespace v8;
 
@@ -99,8 +100,25 @@ DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
                 LogMessage::fromMessage(try_catch.Message(), "dissector"));
           }
         } else {
+          v8::Local<v8::Array> namespaces;
+          std::vector<std::string> stringNamespaces;
+          std::vector<std::regex> regexNamespaces;
+
+          if (v8pp::get_option(isolate, func, "namespaces", namespaces)) {
+            for (uint32_t i = 0; i < namespaces->Length(); ++i) {
+              v8::Local<v8::Value> ns = namespaces->Get(i);
+              if (ns->IsString()) {
+                stringNamespaces.push_back(
+                    v8pp::from_v8<std::string>(isolate, ns, ""));
+              } else if (ns->IsRegExp()) {
+                regexNamespaces.push_back(std::regex(v8pp::from_v8<std::string>(
+                    isolate, ns.As<v8::RegExp>()->GetSource(), "")));
+              }
+            }
+          }
+
           dissectors.push_back(
-              {diss.namespaces, diss.regexNamespaces,
+              {stringNamespaces, regexNamespaces,
                v8::UniquePersistent<v8::Function>(isolate, func)});
         }
       }

@@ -54,7 +54,6 @@ class Session extends EventEmitter {
           return result.code;
         }).then((code) => {
           sessOption.dissectors.push({
-            namespaces: diss.namespaces,
             script: code,
             resourceName: diss.script
           });
@@ -80,7 +79,6 @@ class Session extends EventEmitter {
           return result.code;
         }).then((code) => {
           sessOption.stream_dissectors.push({
-            namespaces: diss.namespaces,
             script: code,
             resourceName: diss.script
           });

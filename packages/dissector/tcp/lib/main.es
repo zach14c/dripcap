@@ -4,8 +4,8 @@ import {
 
 export default class TCP {
   activate() {
-    Session.registerDissector([/::Ethernet::\w+::<TCP>/], `${__dirname}/tcp.es`);
-    Session.registerStreamDissector([/::Ethernet::\w+::<TCP>/], `${__dirname}/tcp_stream.es`);
+    Session.registerDissector(`${__dirname}/tcp.es`);
+    Session.registerStreamDissector(`${__dirname}/tcp_stream.es`);
   }
 
   deactivate() {

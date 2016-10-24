@@ -3,6 +3,10 @@ import {Flags, Enum} from 'dripcap/utils';
 import {IPv4Address} from 'dripcap/ipv4';
 
 export default class Dissector {
+  static get namespaces() {
+    return ['::Ethernet::<IPv4>'];
+  }
+
   analyze(packet, parentLayer) {
     let layer = new Layer('::Ethernet::IPv4');
     layer.name = 'IPv4';
