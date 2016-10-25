@@ -39,7 +39,8 @@ public:
   Private(const std::shared_ptr<Context> &ctx);
   ~Private();
   const std::vector<const DissectorFunc *> &findDessector(
-      const std::string &ns, const std::vector<DissectorFunc> &dissectors,
+      const std::string &ns,
+      const std::unordered_map<std::string, DissectorFunc> &dissectors,
       std::unordered_map<std::string, std::vector<const DissectorFunc *>>
           *nsMap);
 
@@ -73,7 +74,7 @@ DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
       isolate->GetCurrentContext()->Global()->Set(
           v8pp::to_v8(isolate, "console"), console);
 
-      std::vector<DissectorFunc> dissectors;
+      std::unordered_map<std::string, DissectorFunc> dissectors;
       std::unordered_map<std::string, std::vector<const DissectorFunc *>> nsMap;
 
       for (const Dissector &diss : ctx.dissectors) {
@@ -117,9 +118,9 @@ DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
             }
           }
 
-          dissectors.push_back(
-              {stringNamespaces, regexNamespaces,
-               v8::UniquePersistent<v8::Function>(isolate, func)});
+          dissectors[diss.resourceName] = {
+              stringNamespaces, regexNamespaces,
+              v8::UniquePersistent<v8::Function>(isolate, func)};
         }
       }
 
@@ -246,7 +247,8 @@ DissectorThread::Private::~Private() {
 
 const std::vector<const DissectorFunc *> &
 DissectorThread::Private::findDessector(
-    const std::string &ns, const std::vector<DissectorFunc> &dissectors,
+    const std::string &ns,
+    const std::unordered_map<std::string, DissectorFunc> &dissectors,
     std::unordered_map<std::string, std::vector<const DissectorFunc *>>
         *nsMap) {
   static const std::vector<DissectorFunc *> null;
@@ -256,7 +258,8 @@ DissectorThread::Private::findDessector(
     return it->second;
 
   std::vector<const DissectorFunc *> &funcs = (*nsMap)[ns];
-  for (const auto &diss : dissectors) {
+  for (const auto &pair : dissectors) {
+    const auto &diss = pair.second;
     for (const std::string &dissNs : diss.namespaces) {
       if (dissNs == ns) {
         funcs.push_back(&diss);
