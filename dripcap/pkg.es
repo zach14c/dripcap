@@ -3,6 +3,9 @@ import path from 'path';
 import _ from 'underscore';
 import config from 'dripcap/config';
 import babelTemplate from 'babel-template';
+import {
+  EventEmitter
+} from 'events';
 
 function globalPaths() {
   return {
@@ -30,8 +33,9 @@ require("babel-register")({
   ]
 });
 
-export default class Package {
+export default class Package extends EventEmitter {
   constructor(jsonPath, profile) {
+    super();
     this.path = path.dirname(jsonPath);
     this.userPackage = path.normalize(this.path).startsWith(path.normalize(config.userPackagePath));
 
@@ -99,6 +103,9 @@ export default class Package {
   }
 
   activate() {
+    this._watcher = fs.watch(this.path, {recursive: true}, _.debounce(() => {
+      this.emit('file-updated');
+    }, 100));
     return this._resolve();
   }
 
@@ -112,6 +119,8 @@ export default class Package {
 
   async deactivate() {
     await this.load();
+    this._watcher.close();
+    this.removeAllListeners();
     return new Promise((resolve, reject) => {
       try {
         this.root.deactivate();

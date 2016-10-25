@@ -19,6 +19,12 @@ import {
 } from 'dripcap';
 
 Package.sub('core:package-loaded', () => process.nextTick(() => $('#splash').fadeOut()));
+Package.sub('core:package-file-updated', () => {
+  if (prof.getConfig('auto-reload') === 'window') {
+    Action.emit('core:reload-window');
+  }
+});
+
 Action.on('core:new-window', () => remote.getGlobal('dripcap').newWindow());
 Action.on('core:close-window', () => remote.getCurrentWindow().close());
 Action.on('core:reload-window', () => remote.getCurrentWindow().reload());

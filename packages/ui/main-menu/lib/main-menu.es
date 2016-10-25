@@ -7,7 +7,9 @@ import {
   KeyBind,
   Theme,
   Action,
-  Config
+  PubSub,
+  Config,
+  Profile
 } from 'dripcap';
 let {
   app
@@ -124,6 +126,34 @@ export default class MainMenu {
         label: 'Reload Window',
         accelerator: KeyBind.get('!menu', 'core:reload-window'),
         click: action('core:reload-window')
+      }));
+
+      let mode = Profile.getConfig('auto-reload') || 'off';
+      menu.append(new MenuItem({
+        label: 'Auto Reload',
+        submenu: [
+          {
+            label: 'Off',
+            type: 'radio',
+            checked: mode === 'off',
+            click: () => { Profile.setConfig('auto-reload', 'off'); }
+          },
+          {
+            label: 'Window',
+            type: 'radio',
+            checked: mode === 'window',
+            click: () => { Profile.setConfig('auto-reload', 'window'); }
+          },
+          {
+            label: 'Package',
+            type: 'radio',
+            checked: mode === 'package',
+            click: () => { Profile.setConfig('auto-reload', 'package'); }
+          }
+        ]
+      }));
+      menu.append(new MenuItem({
+        type: 'separator'
       }));
       menu.append(new MenuItem({
         label: 'Toggle DevTools',
