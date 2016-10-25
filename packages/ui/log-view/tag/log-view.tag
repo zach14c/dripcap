@@ -4,14 +4,14 @@
     <i class="fa fa-arrow-circle-right" show={ data && !show }></i>
     <i class="fa fa-arrow-circle-down" show={ data && show }></i>
     <span class="text-{level}">[{date}] {message}</span>
-    <ul if={ data } show={ show }>
+    <ul if={ data && data.resourceName } show={ show }>
       <li>
         { data.resourceName }
       </li>
-      <li>
+      <li if={ data.lineNumber >= 0 }>
         Line: { data.lineNumber } Column: { data.startColumn }
       </li>
-      <li>
+      <li if={ data.sourceLine }>
         { data.sourceLine }
       </li>
     </ul>
