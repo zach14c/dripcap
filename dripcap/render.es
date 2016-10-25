@@ -21,7 +21,7 @@ import {
 Package.sub('core:package-loaded', () => process.nextTick(() => $('#splash').fadeOut()));
 Action.on('core:new-window', () => remote.getGlobal('dripcap').newWindow());
 Action.on('core:close-window', () => remote.getCurrentWindow().close());
-Action.on('core:reload', () => remote.getCurrentWindow().reload());
+Action.on('core:reload-window', () => remote.getCurrentWindow().reload());
 Action.on('core:toggle-devtools', () => remote.getCurrentWindow().toggleDevTools());
 Action.on('core:window-zoom', () => remote.getCurrentWindow().maximize());
 Action.on('core:open-user-directroy', () => shell.showItemInFolder(config.profilePath));
