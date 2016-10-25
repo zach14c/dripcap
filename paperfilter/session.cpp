@@ -1,11 +1,10 @@
 #include "session.hpp"
 #include "buffer.hpp"
 #include "dissector.hpp"
-#include "dissector_thread.hpp"
+#include "packet_dispatcher.hpp"
 #include "filter_thread.hpp"
 #include "layer.hpp"
 #include "packet.hpp"
-#include "packet_queue.hpp"
 #include "packet_store.hpp"
 #include "pcap.hpp"
 #include "permission.hpp"
@@ -33,9 +32,8 @@ public:
   void log(const LogMessage &msg);
 
 public:
-  PacketQueue queue;
   PacketStore store;
-  std::vector<std::unique_ptr<DissectorThread>> dissectorThreads;
+  std::unique_ptr<PacketDispatcher> packetDispatcher;
   std::unordered_map<std::string, FilterContext> filterThreads;
   std::string ns;
   std::string filterScript;
@@ -131,8 +129,6 @@ void Session::Private::log(const LogMessage &msg) {
 }
 
 Session::Private::~Private() {
-  queue.close();
-  dissectorThreads.clear();
   filterThreads.clear();
   streamDispatcher.reset();
   pcap.reset();
@@ -176,8 +172,8 @@ Session::Session(v8::Local<v8::Value> option) : d(new Private()) {
     }
   }
 
-  auto dissCtx = std::make_shared<DissectorThread::Context>();
-  dissCtx->queue = &d->queue;
+  auto dissCtx = std::make_shared<PacketDispatcher::Context>();
+  dissCtx->threads = d->threads;
   dissCtx->packetCb = [this](const std::shared_ptr<Packet> &pkt) {
     d->store.insert(pkt);
   };
@@ -187,10 +183,7 @@ Session::Session(v8::Local<v8::Value> option) : d(new Private()) {
   };
   dissCtx->dissectors.swap(dissectors);
   dissCtx->logCb = std::bind(&Private::log, std::ref(d), std::placeholders::_1);
-
-  for (int i = 0; i < d->threads; ++i) {
-    d->dissectorThreads.emplace_back(new DissectorThread(dissCtx));
-  }
+  d->packetDispatcher.reset(new PacketDispatcher(dissCtx));
 
   auto streamCtx = std::make_shared<StreamDispatcher::Context>();
   streamCtx->threads = d->threads;
@@ -203,7 +196,7 @@ Session::Session(v8::Local<v8::Value> option) : d(new Private()) {
   };
   streamCtx->vpLayersCb = [this](std::vector<std::unique_ptr<Layer>> layers) {
     for (auto &layer : layers) {
-      d->queue.push(std::unique_ptr<Packet>(new Packet(std::move(layer))));
+      d->packetDispatcher->analyze(std::unique_ptr<Packet>(new Packet(std::move(layer))));
     }
   };
   d->streamDispatcher.reset(new StreamDispatcher(streamCtx));
@@ -223,7 +216,7 @@ void Session::analyze(std::unique_ptr<Packet> pkt) {
   layer->setName("Raw Layer");
   layer->setPayload(pkt->payload());
   pkt->addLayer(layer);
-  d->queue.push(std::move(pkt));
+  d->packetDispatcher->analyze(std::move(pkt));
 }
 
 void Session::filter(const std::string &name, const std::string &filter) {

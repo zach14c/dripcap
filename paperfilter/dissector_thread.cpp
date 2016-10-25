@@ -1,9 +1,9 @@
 #include "dissector_thread.hpp"
+#include "packet_dispatcher.hpp"
 #include "log_message.hpp"
 #include "console.hpp"
 #include "layer.hpp"
 #include "packet.hpp"
-#include "packet_queue.hpp"
 #include "paper_context.hpp"
 #include "stream_chunk.hpp"
 #include <cstdlib>
@@ -36,7 +36,7 @@ struct DissectorFunc {
 
 class DissectorThread::Private {
 public:
-  Private(const std::shared_ptr<Context> &ctx);
+  Private(const std::shared_ptr<DissectorSharedContext> &ctx);
   ~Private();
   const std::vector<const DissectorFunc *> &findDessector(
       const std::string &ns,
@@ -46,13 +46,15 @@ public:
 
 public:
   std::thread thread;
-  std::shared_ptr<Context> ctx;
+  std::shared_ptr<DissectorSharedContext> ctx;
+  bool closed = false;
 };
 
-DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
+DissectorThread::Private::Private(
+    const std::shared_ptr<DissectorSharedContext> &ctx)
     : ctx(ctx) {
   thread = std::thread([this]() {
-    Context &ctx = *this->ctx;
+    DissectorSharedContext &ctx = *this->ctx;
     v8::Isolate::CreateParams create_params;
     create_params.array_buffer_allocator = new ArrayBufferAllocator();
     v8::Isolate *isolate = v8::Isolate::New(create_params);
@@ -125,9 +127,15 @@ DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
       }
 
       while (true) {
-        auto pkt = ctx.queue->pop();
-        if (!pkt)
-          return;
+        std::unique_lock<std::mutex> lock(ctx.mutex);
+        ctx.cond.wait(lock,
+                      [this, &ctx] { return !ctx.queue.empty() || closed; });
+        if (closed)
+          break;
+
+        std::shared_ptr<Packet> pkt = std::move(ctx.queue.front());
+        ctx.queue.pop();
+        lock.unlock();
 
         v8::Local<v8::Object> packetObj =
             v8pp::class_<Packet>::reference_external(isolate, pkt.get());
@@ -233,6 +241,8 @@ DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
 
         if (ctx.streamsCb)
           ctx.streamsCb(seq, std::move(streams));
+
+        lock.lock();
       }
     }
 
@@ -241,6 +251,11 @@ DissectorThread::Private::Private(const std::shared_ptr<Context> &ctx)
 }
 
 DissectorThread::Private::~Private() {
+  {
+    std::lock_guard<std::mutex> lock(ctx->mutex);
+    closed = true;
+  }
+  ctx->cond.notify_all();
   if (thread.joinable())
     thread.join();
 }
@@ -279,7 +294,8 @@ DissectorThread::Private::findDessector(
   return funcs;
 }
 
-DissectorThread::DissectorThread(const std::shared_ptr<Context> &ctx)
+DissectorThread::DissectorThread(
+    const std::shared_ptr<DissectorSharedContext> &ctx)
     : d(new Private(ctx)) {}
 
 DissectorThread::~DissectorThread() {}
