@@ -24,10 +24,14 @@ if (process.platform === 'darwin' && process.env['DRIPCAP_UI_TEST'] != null) {
 mkpath.sync(config.userPackagePath);
 mkpath.sync(config.profilePath);
 
-if (!Session.permission) {
+if (process.platform === 'darwin' && !Session.permission) {
   let helperPath = path.join(__dirname, '../../../Frameworks/Dripcap Helper Installer.app');
   let helperAppPath = path.join(helperPath, '/Contents/MacOS/Dripcap Helper Installer');
-  childProcess.execFileSync(helperAppPath);
+  try {
+    childProcess.execFileSync(helperAppPath);
+  } catch (e) {
+    console.warn(e);
+  }
 }
 
 class Dripcap {
