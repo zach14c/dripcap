@@ -18,13 +18,13 @@ export default class SessionInterface extends EventEmitter {
   }
 
   registerDissector(script) {
-    return this._dissectors.push({
+    this._dissectors.push({
       script
     });
   }
 
   registerStreamDissector(script) {
-    return this._streamDissectors.push({
+    this._streamDissectors.push({
       script
     });
   }
@@ -32,14 +32,14 @@ export default class SessionInterface extends EventEmitter {
   unregisterDissector(script) {
     let index = this._dissectors.find(e => e.path === script);
     if (index != null) {
-      return this._dissectors.splice(index, 1);
+      this._dissectors.splice(index, 1);
     }
   }
 
   unregisterStreamDissector(script) {
     let index = this._streamDissectors.find(e => e.path === script);
     if (index != null) {
-      return this._streamDissectors.splice(index, 1);
+      this._streamDissectors.splice(index, 1);
     }
   }
 
