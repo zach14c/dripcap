@@ -31,7 +31,7 @@ gulp.task('mocha', () => {
       require: ['babel-register'],
       timeout: 30000,
       slow: 10000,
-      retries: 1
+      retries: 3
     }))
     .once('error', () => {
       process.exit(1);
