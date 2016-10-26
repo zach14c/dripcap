@@ -126,7 +126,6 @@ export default class Package extends EventEmitter {
     this._activated = false;
     await this.load();
     this._watcher.close();
-    this.removeAllListeners();
     return new Promise((resolve, reject) => {
       if (this.root != null) {
         try {

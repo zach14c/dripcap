@@ -90,6 +90,7 @@ export default class PackageInterface extends PubSub {
         pkg.load().then(() => {
           process.nextTick(() => this.triggerlLoaded());
         });
+        pkg.removeAllListeners();
         pkg.on('file-updated', () => {
           this.pub('core:package-file-updated', pkg.name);
           if (this.parent.profile.getConfig('auto-reload') === 'package') {
