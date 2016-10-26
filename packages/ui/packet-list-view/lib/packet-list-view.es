@@ -76,6 +76,9 @@ export default class PacketListView {
     });
 
     PubSub.sub('core:capturing-status', n => {
+      if (n.packets < this.packets) {
+        this.reset();
+      }
       this.packets = n.packets;
       if (n.filtered.main != null) {
         this.filtered = n.filtered.main;

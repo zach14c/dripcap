@@ -21,12 +21,18 @@ export default class SessionInterface extends EventEmitter {
     this._dissectors.push({
       script
     });
+    for (let sess of this.list) {
+      sess.registerDissector(script);
+    }
   }
 
   registerStreamDissector(script) {
     this._streamDissectors.push({
       script
     });
+    for (let sess of this.list) {
+      sess.registerStreamDissector(script);
+    }
   }
 
   unregisterDissector(script) {
@@ -34,12 +40,18 @@ export default class SessionInterface extends EventEmitter {
     if (index != null) {
       this._dissectors.splice(index, 1);
     }
+    for (let sess of this.list) {
+      sess.unregisterDissector(script);
+    }
   }
 
   unregisterStreamDissector(script) {
     let index = this._streamDissectors.find(e => e.path === script);
     if (index != null) {
       this._streamDissectors.splice(index, 1);
+    }
+    for (let sess of this.list) {
+      sess.unregisterStreamDissector(script);
     }
   }
 

@@ -9,7 +9,7 @@ class Packet;
 
 class Session {
 public:
-  Session(v8::Local<v8::Value> option);
+  Session(v8::Local<v8::Object> option);
   ~Session();
   Session(const Session &) = delete;
   Session &operator=(const Session &) = delete;
@@ -40,6 +40,8 @@ public:
 
   void start();
   void stop();
+
+  void reset(v8::Local<v8::Object> opt);
 
 private:
   class Private;

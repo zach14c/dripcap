@@ -38,6 +38,7 @@ public:
     SetPrototypeMethod(tpl, "start", start);
     SetPrototypeMethod(tpl, "stop", stop);
     SetPrototypeMethod(tpl, "close", close);
+    SetPrototypeMethod(tpl, "reset", reset);
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
 
     v8::Local<v8::Object> func = Nan::GetFunction(tpl).ToLocalChecked();
@@ -48,8 +49,9 @@ public:
   }
 
   static NAN_METHOD(New) {
-    if (info.IsConstructCall()) {
-      SessionWrapper *obj = new SessionWrapper(new Session(info[0]));
+    if (info.IsConstructCall() && info[0]->IsObject()) {
+      SessionWrapper *obj =
+          new SessionWrapper(new Session(info[0].As<v8::Object>()));
       obj->Wrap(info.This());
       info.GetReturnValue().Set(info.This());
     }
@@ -233,6 +235,13 @@ public:
       return;
     wrapper->session->stop();
     wrapper->session.reset();
+  }
+
+  static NAN_METHOD(reset) {
+    SessionWrapper *wrapper = ObjectWrap::Unwrap<SessionWrapper>(info.Holder());
+    if (!wrapper->session || !info[0]->IsObject())
+      return;
+    wrapper->session->reset(info[0].As<v8::Object>());
   }
 
   static inline Nan::Persistent<v8::Function> &constructor() {

@@ -32,7 +32,7 @@ public:
   void log(const LogMessage &msg);
 
 public:
-  PacketStore store;
+  std::unique_ptr<PacketStore> store;
   std::unique_ptr<PacketDispatcher> packetDispatcher;
   std::unordered_map<std::string, FilterContext> filterThreads;
   std::string ns;
@@ -100,7 +100,7 @@ Session::Private::Private() {
       Isolate *isolate = Isolate::GetCurrent();
       Local<Object> obj = Object::New(isolate);
       v8pp::set_option(isolate, obj, "capturing", d->capturing);
-      v8pp::set_option(isolate, obj, "packets", d->store.maxSeq());
+      v8pp::set_option(isolate, obj, "packets", d->store->maxSeq());
       Local<Object> filtered = Object::New(isolate);
 
       for (const auto &pair : d->filterThreads) {
@@ -115,9 +115,6 @@ Session::Private::Private() {
       func->Call(isolate->GetCurrentContext()->Global(), 1, args);
     }
   });
-
-  auto storeCb = [this](uint32_t maxSeq) { uv_async_send(&statusCbAsync); };
-  store.addHandler(storeCb);
 }
 
 void Session::Private::log(const LogMessage &msg) {
@@ -136,77 +133,8 @@ Session::Private::~Private() {
   uv_close((uv_handle_t *)&logCbAsync, nullptr);
 }
 
-Session::Session(v8::Local<v8::Value> option) : d(new Private()) {
-  if (option.IsEmpty() || !option->IsObject())
-    return;
-
-  Isolate *isolate = Isolate::GetCurrent();
-  Local<Object> opt = option.As<Object>();
-  v8pp::get_option(isolate, opt, "namespace", d->ns);
-  v8pp::get_option(isolate, opt, "filterScript", d->filterScript);
-
-  d->threads = std::thread::hardware_concurrency();
-  v8pp::get_option(isolate, opt, "threads", d->threads);
-  d->threads = std::max(1, d->threads - 1);
-
-  Local<Array> dissectorArray;
-  std::vector<Dissector> dissectors;
-  if (v8pp::get_option(isolate, opt, "dissectors", dissectorArray)) {
-    for (uint32_t i = 0; i < dissectorArray->Length(); ++i) {
-      Local<Value> diss = dissectorArray->Get(i);
-      if (!diss.IsEmpty() && diss->IsObject()) {
-        dissectors.emplace_back(diss.As<Object>());
-      }
-    }
-  }
-
-  Local<Array> streamDissectorArray;
-  std::vector<Dissector> streamDissectors;
-  if (v8pp::get_option(isolate, opt, "stream_dissectors",
-                       streamDissectorArray)) {
-    for (uint32_t i = 0; i < streamDissectorArray->Length(); ++i) {
-      Local<Value> diss = streamDissectorArray->Get(i);
-      if (!diss.IsEmpty() && diss->IsObject()) {
-        streamDissectors.emplace_back(diss.As<Object>());
-      }
-    }
-  }
-
-  auto dissCtx = std::make_shared<PacketDispatcher::Context>();
-  dissCtx->threads = d->threads;
-  dissCtx->packetCb = [this](const std::shared_ptr<Packet> &pkt) {
-    d->store.insert(pkt);
-  };
-  dissCtx->streamsCb = [this](
-      uint32_t seq, std::vector<std::unique_ptr<StreamChunk>> streams) {
-    d->streamDispatcher->insert(seq, std::move(streams));
-  };
-  dissCtx->dissectors.swap(dissectors);
-  dissCtx->logCb = std::bind(&Private::log, std::ref(d), std::placeholders::_1);
-  d->packetDispatcher.reset(new PacketDispatcher(dissCtx));
-
-  auto streamCtx = std::make_shared<StreamDispatcher::Context>();
-  streamCtx->threads = d->threads;
-  streamCtx->dissectors.swap(streamDissectors);
-  streamCtx->logCb =
-      std::bind(&Private::log, std::ref(d), std::placeholders::_1);
-  streamCtx->streamsCb = [this](
-      std::vector<std::unique_ptr<StreamChunk>> streams) {
-    d->streamDispatcher->insert(std::move(streams));
-  };
-  streamCtx->vpLayersCb = [this](std::vector<std::unique_ptr<Layer>> layers) {
-    for (auto &layer : layers) {
-      d->packetDispatcher->analyze(std::unique_ptr<Packet>(new Packet(std::move(layer))));
-    }
-  };
-  d->streamDispatcher.reset(new StreamDispatcher(streamCtx));
-
-  auto pcapCtx = std::make_shared<Pcap::Context>();
-  pcapCtx->logCb = std::bind(&Private::log, std::ref(d), std::placeholders::_1);
-  pcapCtx->packetCb = [this](std::unique_ptr<Packet> pkt) {
-    analyze(std::move(pkt));
-  };
-  d->pcap.reset(new Pcap(pcapCtx));
+Session::Session(v8::Local<v8::Object> option) : d(new Private()) {
+  reset(option);
 }
 
 Session::~Session() {}
@@ -225,7 +153,7 @@ void Session::filter(const std::string &name, const std::string &filter) {
   if (!filter.empty()) {
     FilterContext &context = d->filterThreads[name];
     context.ctx = std::make_shared<FilterThread::Context>();
-    context.ctx->store = &d->store;
+    context.ctx->store = d->store.get();
     context.ctx->filter = filter;
     context.ctx->script = d->filterScript;
     context.ctx->packets.addHandler(
@@ -257,7 +185,7 @@ void Session::setStatusCallback(const Local<Function> &cb) {
 }
 
 std::shared_ptr<const Packet> Session::get(uint32_t seq) const {
-  return d->store.get(seq);
+  return d->store->get(seq);
 }
 
 std::vector<uint32_t> Session::getFiltered(const std::string &name,
@@ -312,5 +240,101 @@ void Session::start() {
 void Session::stop() {
   d->pcap->stop();
   d->capturing = false;
+  uv_async_send(&d->statusCbAsync);
+}
+
+void Session::reset(v8::Local<v8::Object> opt) {
+  Isolate *isolate = Isolate::GetCurrent();
+
+  v8pp::get_option(isolate, opt, "namespace", d->ns);
+  v8pp::get_option(isolate, opt, "filterScript", d->filterScript);
+
+  d->threads = std::thread::hardware_concurrency();
+  v8pp::get_option(isolate, opt, "threads", d->threads);
+  d->threads = std::max(1, d->threads - 1);
+
+  Local<Array> dissectorArray;
+  std::vector<Dissector> dissectors;
+  if (v8pp::get_option(isolate, opt, "dissectors", dissectorArray)) {
+    for (uint32_t i = 0; i < dissectorArray->Length(); ++i) {
+      Local<Value> diss = dissectorArray->Get(i);
+      if (!diss.IsEmpty() && diss->IsObject()) {
+        dissectors.emplace_back(diss.As<Object>());
+      }
+    }
+  }
+
+  Local<Array> streamDissectorArray;
+  std::vector<Dissector> streamDissectors;
+  if (v8pp::get_option(isolate, opt, "stream_dissectors",
+                       streamDissectorArray)) {
+    for (uint32_t i = 0; i < streamDissectorArray->Length(); ++i) {
+      Local<Value> diss = streamDissectorArray->Get(i);
+      if (!diss.IsEmpty() && diss->IsObject()) {
+        streamDissectors.emplace_back(diss.As<Object>());
+      }
+    }
+  }
+
+  auto dissCtx = std::make_shared<PacketDispatcher::Context>();
+  dissCtx->threads = d->threads;
+  dissCtx->packetCb = [this](const std::shared_ptr<Packet> &pkt) {
+    d->store->insert(pkt);
+  };
+  dissCtx->streamsCb = [this](
+      uint32_t seq, std::vector<std::unique_ptr<StreamChunk>> streams) {
+    d->streamDispatcher->insert(seq, std::move(streams));
+  };
+  dissCtx->dissectors.swap(dissectors);
+  dissCtx->logCb = std::bind(&Private::log, std::ref(d), std::placeholders::_1);
+  d->packetDispatcher.reset(new PacketDispatcher(dissCtx));
+
+  auto streamCtx = std::make_shared<StreamDispatcher::Context>();
+  streamCtx->threads = d->threads;
+  streamCtx->dissectors.swap(streamDissectors);
+  streamCtx->logCb =
+      std::bind(&Private::log, std::ref(d), std::placeholders::_1);
+  streamCtx->streamsCb = [this](
+      std::vector<std::unique_ptr<StreamChunk>> streams) {
+    d->streamDispatcher->insert(std::move(streams));
+  };
+  streamCtx->vpLayersCb = [this](std::vector<std::unique_ptr<Layer>> layers) {
+    for (auto &layer : layers) {
+      d->packetDispatcher->analyze(
+          std::unique_ptr<Packet>(new Packet(std::move(layer))));
+    }
+  };
+  d->streamDispatcher.reset(new StreamDispatcher(streamCtx));
+
+  auto pcapCtx = std::make_shared<Pcap::Context>();
+  pcapCtx->logCb = std::bind(&Private::log, std::ref(d), std::placeholders::_1);
+  pcapCtx->packetCb = [this](std::unique_ptr<Packet> pkt) {
+    analyze(std::move(pkt));
+  };
+  d->pcap.reset(new Pcap(pcapCtx));
+
+  std::vector<std::shared_ptr<Packet>> packets;
+  if (d->store) {
+    packets = d->store->get(1, d->store->maxSeq());
+  }
+  auto storeCb = [this](uint32_t maxSeq) { uv_async_send(&d->statusCbAsync); };
+  d->store.reset(new PacketStore());
+  d->store->addHandler(storeCb);
+
+  std::vector<std::pair<std::string, std::string>> filters;
+  for (const auto &pair : d->filterThreads) {
+    filters.push_back(std::make_pair(pair.first, pair.second.ctx->filter));
+  }
+  d->filterThreads.clear();
+  for (const auto &pair : filters) {
+    filter(pair.first, pair.second);
+  }
+
+  for (const auto &pkt : packets) {
+    if (!pkt->vpacket()) {
+      analyze(pkt->shallowClone());
+    }
+  }
+
   uv_async_send(&d->statusCbAsync);
 }

@@ -35,7 +35,9 @@ PacketDispatcher::~PacketDispatcher() {}
 void PacketDispatcher::analyze(std::unique_ptr<Packet> packet) {
   {
     std::lock_guard<std::mutex> lock(d->dissCtx->mutex);
-    packet->setSeq(++d->packetSeq);
+    if (packet->seq() == 0) {
+      packet->setSeq(++d->packetSeq);
+    }
     d->dissCtx->queue.push(std::move(packet));
   }
   d->dissCtx->cond.notify_all();

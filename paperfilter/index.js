@@ -5,6 +5,26 @@ const nodeResolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 const esprima = require('esprima');
 const msgpack = require('msgpack-lite');
+const _ = require('underscore');
+
+function roll(script) {
+  return rollup({
+    entry: script,
+    external: ['dripcap'],
+    plugins: [
+      nodeResolve({ jsnext: true, main: true }),
+      commonjs()
+    ],
+    onwarn: (e) => {
+      console.log(e)
+    }
+  }).then((bundle) => {
+    const result = bundle.generate({
+      format: 'cjs'
+    });
+    return result.code;
+  });
+}
 
 class Session extends EventEmitter {
   constructor(option) {
@@ -14,6 +34,7 @@ class Session extends EventEmitter {
     (new Function('module', option.filterScript))(module);
     this._filter = module.exports;
 
+    this._option = option;
     this._sess = new paperfilter.Session(option);
     this._sess.logCallback = (log) => {
       this.emit('log', {
@@ -25,6 +46,9 @@ class Session extends EventEmitter {
     this._sess.statusCallback = (stat) => {
       this.emit('status', stat);
     };
+    this._reset = _.debounce(() => {
+      this._sess.reset(this._option);
+    }, 100);
   }
 
   static create(option) {
@@ -37,22 +61,7 @@ class Session extends EventEmitter {
     let tasks = [];
     if (Array.isArray(option.dissectors)) {
       for (let diss of option.dissectors) {
-        tasks.push(rollup({
-          entry: diss.script,
-          external: ['dripcap'],
-          plugins: [
-            nodeResolve({ jsnext: true, main: true }),
-            commonjs()
-          ],
-          onwarn: (e) => {
-            console.log(e)
-          }
-        }).then((bundle) => {
-          const result = bundle.generate({
-            format: 'cjs'
-          });
-          return result.code;
-        }).then((code) => {
+        tasks.push(roll(diss.script).then((code) => {
           sessOption.dissectors.push({
             script: code,
             resourceName: diss.script
@@ -62,22 +71,7 @@ class Session extends EventEmitter {
     }
     if (Array.isArray(option.stream_dissectors)) {
       for (let diss of option.stream_dissectors) {
-        tasks.push(rollup({
-          entry: diss.script,
-          external: ['dripcap'],
-          plugins: [
-            nodeResolve({ jsnext: true, main: true }),
-            commonjs()
-          ],
-          onwarn: (e) => {
-            console.log(e)
-          }
-        }).then((bundle) => {
-          const result = bundle.generate({
-            format: 'cjs'
-          });
-          return result.code;
-        }).then((code) => {
+        tasks.push(roll(diss.script).then((code) => {
           sessOption.stream_dissectors.push({
             script: code,
             resourceName: diss.script
@@ -85,21 +79,7 @@ class Session extends EventEmitter {
         }));
       }
     }
-    tasks.push(rollup({
-      entry: __dirname + '/filter.es',
-      plugins: [
-        nodeResolve({ jsnext: true, main: true }),
-        commonjs()
-      ],
-      onwarn: (e) => {
-        console.log(e)
-      }
-    }).then((bundle) => {
-      const result = bundle.generate({
-        format: 'cjs'
-      });
-      return result.code;
-    }).then((code) => {
+    tasks.push(roll(__dirname + '/filter.es').then((code) => {
       sessOption.filterScript = code;
     }));
     return Promise.all(tasks).then(() => {
@@ -219,6 +199,48 @@ class Session extends EventEmitter {
 
   close() {
     this._sess.close();
+  }
+
+  registerDissector(script) {
+    roll(script).then((code) => {
+      this.unregisterDissector(script);
+      this._option.dissectors.push({
+        script: code,
+        resourceName: script
+      });
+    });
+  }
+
+  registerStreamDissector(script) {
+    roll(script).then((code) => {
+      this.unregisterStreamDissector(script);
+      this._option.stream_dissectors.push({
+        script: code,
+        resourceName: script
+      });
+    });
+  }
+
+  unregisterDissector(script) {
+    let list = [];
+    for (let item of this._option.dissectors) {
+      if (item.resourceName !== script) {
+        list.push(item);
+      }
+    }
+    this._option.dissectors = list;
+    this._reset();
+  }
+
+  unregisterStreamDissector(script) {
+    let list = [];
+    for (let item of this._option.stream_dissectors) {
+      if (item.resourceName !== script) {
+        list.push(item);
+      }
+    }
+    this._option.stream_dissectors = list;
+    this._reset();
   }
 }
 

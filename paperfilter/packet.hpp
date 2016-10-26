@@ -27,6 +27,7 @@ public:
   uint32_t ts_sec() const;
   uint32_t ts_nsec() const;
   uint32_t length() const;
+  bool vpacket() const;
   std::string summary() const;
   std::string extension() const;
 
@@ -42,6 +43,11 @@ public:
   void addLayer(const std::shared_ptr<Layer> &layer);
   const std::unordered_map<std::string, std::shared_ptr<Layer>> &layers() const;
   v8::Local<v8::Object> layersObject() const;
+
+  std::unique_ptr<Packet> shallowClone();
+
+private:
+  Packet();
 
 private:
   class Private;
