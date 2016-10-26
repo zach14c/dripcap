@@ -36,6 +36,8 @@ require("babel-register")({
 export default class Package extends EventEmitter {
   constructor(jsonPath, profile) {
     super();
+    this._activated = false;
+
     this.path = path.dirname(jsonPath);
     this.userPackage = path.normalize(this.path).startsWith(path.normalize(config.userPackagePath));
 
@@ -103,6 +105,8 @@ export default class Package extends EventEmitter {
   }
 
   activate() {
+    if (this._activated) return;
+    this._activated = true;
     this._watcher = fs.watch(this.path, {recursive: true}, _.debounce(() => {
       this.emit('file-updated');
     }, 100));
@@ -118,22 +122,26 @@ export default class Package extends EventEmitter {
   }
 
   async deactivate() {
+    if (!this._activated) return;
+    this._activated = false;
     await this.load();
     this._watcher.close();
     this.removeAllListeners();
     return new Promise((resolve, reject) => {
-      try {
-        this.root.deactivate();
-        this.root = null;
-        this._reset();
-        for (let key in require.cache) {
-          if (key.startsWith(this.path)) {
-            delete require.cache[key];
+      if (this.root != null) {
+        try {
+          this.root.deactivate();
+          this.root = null;
+          this._reset();
+          for (let key in require.cache) {
+            if (key.startsWith(this.path)) {
+              delete require.cache[key];
+            }
           }
+        } catch (e) {
+          reject(e);
+          return;
         }
-      } catch (e) {
-        reject(e);
-        return;
       }
       return resolve(this);
     });

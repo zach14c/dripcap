@@ -82,7 +82,7 @@ export default class PackageInterface extends PubSub {
     }
 
     for (let k in this.list) {
-      var pkg = this.list[k];
+      let pkg = this.list[k];
       if (!loadedPackages[pkg.name]) {
         delete this.list[k];
       } else if (pkg.config.get('enabled')) {
