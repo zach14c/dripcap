@@ -1,4 +1,7 @@
-choco install jq make
+choco install jq
+
+cp C:\MinGW\bin\mingw32-make.exe C:\MinGW\bin\make.exe
+$env:Path = $env:Path + ";C:\MinGW\bin"
 
 Copy-Item -Path ../dripcap -Destination ../dripcap2 -Recurse
 
