@@ -70,6 +70,7 @@ export default class PacketListView {
       this.session = session;
       this.packets = 0;
       this.filtered = -1;
+      this.selectedId = -1;
       this.reset();
       this.update();
     });
@@ -90,7 +91,6 @@ export default class PacketListView {
   reset() {
     this.prevStart = -1;
     this.prevEnd = -1;
-    this.selectedId = -1;
     this.main.empty();
     this.cells = $([]);
   }
