@@ -81,7 +81,7 @@ class Pcap {
       let pakcet = {
         ts_sec: tsSec,
         ts_nsec: nanosec ? tsUsec : tsUsec * 1000,
-        len: origLen,
+        length: origLen,
         payload: payload
       };
 
@@ -116,8 +116,6 @@ export default class PcapFile {
 
   async _open(path) {
     let pcap = new Pcap(path);
-    console.log(pcap.packets);
-
     let sess = await Session.create();
     PubSub.pub('core:session-created', sess);
     sess.on('status', stat => {
@@ -132,7 +130,9 @@ export default class PcapFile {
     Session.list = [sess];
     Session.emit('created', sess);
     await sess.start();
-    sess.analyze(pcap.packets);
+    for (let pkt of pcap.packets) {
+      sess.analyze(pkt);
+    }
   }
 
   async deactivate() {
