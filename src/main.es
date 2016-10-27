@@ -15,14 +15,16 @@ import mkpath from 'mkpath';
 import config from 'dripcap/config';
 import rimraf from 'rimraf';
 import childProcess from 'child_process';
-import {Session} from 'paperfilter';
-
-if (process.platform === 'darwin' && process.env['DRIPCAP_UI_TEST'] != null) {
-  app.dock.hide();
-}
 
 mkpath.sync(config.userPackagePath);
 mkpath.sync(config.profilePath);
+
+var Session = null;
+try {
+  Session = require('paperfilter').Session;
+} catch (e) {
+  console.warn(e);
+}
 
 if (process.platform === 'darwin' && !Session.permission) {
   let helperPath = path.join(__dirname, '../../../Frameworks/Dripcap Helper Installer.app');
@@ -89,7 +91,11 @@ class Dripcap {
 
 const dripcap = new Dripcap();
 
-app.on('quit', () => rimraf(Session.tmpDir, () => {}));
+app.on('quit', () => {
+  if (Session != null) {
+    rimraf(Session.tmpDir, () => {});
+  }
+});
 
 app.on('window-all-closed', () => app.quit());
 
