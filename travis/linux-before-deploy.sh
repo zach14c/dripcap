@@ -1,4 +1,5 @@
 chmod -R g-w debian
+gulp out
 gulp debian
 cd .debian
 chrpath -r /usr/share/dripcap ./usr/share/dripcap/dripcap

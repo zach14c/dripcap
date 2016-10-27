@@ -53,26 +53,17 @@ gulp.task('babel', () =>
 gulp.task('copy', () =>
   gulp.src([
     './package.json',
-    './src/*.html',
-    './src/*.less'
-  ])
+    './*.html',
+    './packages/**/*',
+    './dripcap/**/*',
+    './paperfilter/**/*',
+    '!./**/node_modules'
+  ], {base: './'})
   .pipe(gulp.dest('./.build'))
   .pipe(preservetime())
 );
 
-gulp.task('copypkg', () =>
-  gulp.src([
-    './packages/**/*',
-    './dripcap/**/*',
-    './paperfilter/**/*'
-  ], {
-    base: './'
-  })
-  .pipe(gulp.dest('./.build/'))
-  .pipe(preservetime())
-);
-
-gulp.task('npm', ['copypkg'], async function() {
+gulp.task('npm', async function() {
   await new Promise(res => npm.load({
     production: true,
     depth: 0
@@ -131,8 +122,8 @@ gulp.task('debian-pkg', cb =>
 
 );
 
-gulp.task('debian-bin', ['copy', 'babel', 'copypkg', 'npm'], cb =>
-  gulp.src('./.build/**')
+gulp.task('debian-bin', cb =>
+  gulp.src('./.out/**')
   .pipe(electron({
     version: pkg.devDependencies.electron,
     platform: 'linux',
@@ -148,9 +139,9 @@ gulp.task('debian', sequence(
   'debian-pkg'
 ));
 
-gulp.task('darwin', ['build'], cb => {
+gulp.task('darwin', cb => {
   let options = {
-    dir: __dirname + '/.build',
+    dir: __dirname + '/.out',
     version: pkg.devDependencies.electron,
     out: __dirname + '/.builtapp',
     platform: 'darwin',
@@ -168,9 +159,9 @@ gulp.task('darwin', ['build'], cb => {
   });
 });
 
-gulp.task('win32', ['build'], cb => {
+gulp.task('win32', cb => {
   let options = {
-    dir: __dirname + '/.build',
+    dir: __dirname + '/.out',
     version: pkg.devDependencies.electron,
     out: __dirname + '/.builtapp',
     platform: 'win32',
@@ -203,6 +194,34 @@ gulp.task('default', ['build'], cb => {
 });
 
 gulp.task('build', sequence(
-  ['babel', 'copy', 'copypkg'],
+  ['babel', 'copy'],
   'npm'
+));
+
+gulp.task('out-pf', cb => {
+  gulp.src([
+    './.build/node_modules/paperfilter/*.js',
+    './.build/node_modules/paperfilter/*.json',
+    './.build/node_modules/paperfilter/*.es',
+    './.build/node_modules/paperfilter/**/*.node'
+  ], {base: '.build'})
+  .pipe(gulp.dest('./.out'))
+  .pipe(preservetime())
+});
+
+gulp.task('out-files', cb => {
+  gulp.src([
+    './.build/package.json',
+    './.build/js/*',
+    './.build/*.html',
+    './.build/packages/**/*',
+    './.build/node_modules/**/*',
+    '!./.build/node_modules/paperfilter/**'
+  ], {base: '.build'})
+  .pipe(gulp.dest('./.out'))
+  .pipe(preservetime())
+});
+
+gulp.task('out', sequence(
+  ['out-files', 'out-pf']
 ));

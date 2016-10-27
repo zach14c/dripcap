@@ -14,6 +14,7 @@ security import dev.p12 -k ~/Library/Keychains/osx-build.keychain -P "" -T /usr/
 
 export DRIPCAP_DARWIN_SIGN=C0AC25D3DB05BDAF758A4E0A002F25F63F2FC93A
 
+gulp out
 gulp darwin
 cd .builtapp
 
