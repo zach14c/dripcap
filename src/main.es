@@ -15,16 +15,10 @@ import mkpath from 'mkpath';
 import config from 'dripcap/config';
 import rimraf from 'rimraf';
 import helper from 'dripcap-helper';
+import {Session} from 'paperfilter';
 
 mkpath.sync(config.userPackagePath);
 mkpath.sync(config.profilePath);
-
-var Session = null;
-try {
-  Session = require('paperfilter').Session;
-} catch (e) {
-  console.warn(e);
-}
 
 if (process.platform === 'darwin' && !Session.permission) {
   try {
@@ -90,7 +84,7 @@ class Dripcap {
 const dripcap = new Dripcap();
 
 app.on('quit', () => {
-  if (Session != null) {
+  if (Session.tmpDir) {
     rimraf(Session.tmpDir, () => {});
   }
 });
@@ -102,15 +96,7 @@ app.on('ready', function() {
     dripcap.checkForUpdates();
   }
   if (process.platform === 'win32' && process.env['DRIPCAP_UI_TEST'] == null) {
-    let wpcap = false;
-    for (let dir of process.env.Path.split(';')) {
-      try {
-        fs.accessSync(path.join(dir, 'wpcap.dll'));
-        wpcap = true;
-        break;
-      } catch (e) {}
-    }
-    if (!wpcap) {
+    if (!Session.permission) {
       let button = dialog.showMessageBox({
         title: "WinPcap required",
         message: "Dripcap depends on WinPcap.\nPlease install WinPcap on your system.",

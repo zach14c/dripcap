@@ -1,4 +1,3 @@
-const paperfilter = require('bindings')('paperfilter');
 const EventEmitter = require('events');
 const rollup = require('rollup').rollup;
 const nodeResolve = require('rollup-plugin-node-resolve');
@@ -6,6 +5,13 @@ const commonjs = require('rollup-plugin-commonjs');
 const esprima = require('esprima');
 const msgpack = require('msgpack-lite');
 const _ = require('underscore');
+
+var paperfilter = null;
+try {
+  paperfilter = require('bindings')('paperfilter');
+} catch (e) {
+  console.warn(e);
+}
 
 function roll(script) {
   return rollup({
@@ -29,6 +35,9 @@ function roll(script) {
 class Session extends EventEmitter {
   constructor(option) {
     super();
+    if (paperfilter == null) {
+     throw new Error('failed to load the native module');
+    }
 
     let module = {};
     (new Function('module', option.filterScript))(module);
@@ -122,13 +131,11 @@ class Session extends EventEmitter {
     return this._sess.namespace;
   }
 
-  get permission() {
-    return this._sess.permission;
-  }
-
   static get permission() {
     if (process.env['DRIPCAP_UI_TEST'] != null) {
       return true;
+    } else if (paperfilter == null) {
+      return false;
     }
     return paperfilter.Session.permission;
   }
@@ -136,11 +143,16 @@ class Session extends EventEmitter {
   static get devices() {
     if (process.env['DRIPCAP_UI_TEST'] != null) {
       return require(process.env['DRIPCAP_UI_TEST'] + '/list.json');
+    } else if (paperfilter == null) {
+      return [];
     }
     return paperfilter.Session.devices;
   }
 
   static get tmpDir() {
+    if (paperfilter == null) {
+     return '';
+   }
     return paperfilter.Session.tmpDir;
   }
 
