@@ -65,6 +65,10 @@ export default class SessionInterface extends EventEmitter {
     let sess = await Session.create(option);
     sess.interface = iface;
 
+    if (options.filter != null) {
+      sess.setBPF(options.filter);
+    }
+
     this.parent.pubsub.pub('core:capturing-settings', {
       iface,
       options
