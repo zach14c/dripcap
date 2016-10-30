@@ -14,7 +14,7 @@ import fs from 'fs';
 import mkpath from 'mkpath';
 import config from 'dripcap/config';
 import rimraf from 'rimraf';
-import childProcess from 'child_process';
+import helper from 'dripcap-helper';
 
 mkpath.sync(config.userPackagePath);
 mkpath.sync(config.profilePath);
@@ -27,10 +27,8 @@ try {
 }
 
 if (process.platform === 'darwin' && !Session.permission) {
-  let helperPath = path.join(__dirname, '../../../Frameworks/Dripcap Helper Installer.app');
-  let helperAppPath = path.join(helperPath, '/Contents/MacOS/Dripcap Helper Installer');
   try {
-    childProcess.execFileSync(helperAppPath);
+    helper();
   } catch (e) {
     console.warn(e);
   }

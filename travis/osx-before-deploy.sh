@@ -18,13 +18,6 @@ gulp out
 gulp darwin
 cd .builtapp
 
-git clone https://github.com/dripcap/dripcap-helper.git dripcap-helper
-plutil -replace 'CFBundleVersion' -string `node -p "require('../package.json').version"` dripcap-helper/DripcapHelper/Info.plist
-cd dripcap-helper
-xcodebuild -configuration Release
-cd ..
-
-cp -r ./dripcap-helper/build/Release/Dripcap\ Helper\ Installer.app ./Dripcap-darwin-x64/dripcap.app/Contents/Frameworks
 codesign --deep --force --verify --verbose --sign "$DRIPCAP_DARWIN_SIGN" ./Dripcap-darwin-x64/dripcap.app/Contents/Frameworks/*
 codesign --deep --force --verify --verbose --sign "$DRIPCAP_DARWIN_SIGN" "./Dripcap-darwin-x64/dripcap.app"
 ditto -c -k --sequesterRsrc --keepParent ./Dripcap-darwin-x64/dripcap.app ../dripcap-darwin-amd64.zip
