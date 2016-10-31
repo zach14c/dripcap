@@ -2,6 +2,7 @@
 #include "log_message.hpp"
 #include "packet.hpp"
 #include "layer.hpp"
+#include "item_value.hpp"
 #include "packet_store.hpp"
 #include "paper_context.hpp"
 #include "console.hpp"
@@ -45,7 +46,7 @@ FilterFunc makeFilter(const json11::Json &json) {
   const std::string &type = json["type"].string_value();
 
   if (type == "MemberExpression") {
-    const json11::Json& property = json["property"];
+    const json11::Json &property = json["property"];
     const std::string &propertyType = property["type"].string_value();
     FilterFunc propertyFunc;
 
@@ -60,27 +61,49 @@ FilterFunc makeFilter(const json11::Json &json) {
 
     const FilterFunc &objectFunc = makeFilter(json["object"]);
 
-    return FilterFunc([isolate, objectFunc, propertyFunc](const Packet &pkt){
-
+    return FilterFunc([isolate, objectFunc, propertyFunc](
+                          const Packet &pkt) -> v8::Local<v8::Value> {
       v8::Local<v8::Value> object = objectFunc(pkt);
       v8::Local<v8::Value> property = propertyFunc(pkt);
-      v8::String::Utf8Value utf8(object.As<v8::Object>()->GetPropertyNames());
-      printf("%p %s\n", v8pp::class_<Layer>::unwrap_object(isolate, object), *utf8);
-      return v8pp::to_v8(isolate, rand() % 2);
+
+      const std::string &name =
+          v8pp::from_v8<std::string>(isolate, property, "");
+      if (name.empty())
+        return v8::Null(isolate);
+
+      if (const Layer *layer =
+              v8pp::class_<Layer>::unwrap_object(isolate, object)) {
+        const std::unordered_map<std::string, ItemValue> &attrs =
+            layer->attrs();
+        const auto it = attrs.find(name);
+        if (it != attrs.end()) {
+          return it->second.data();
+        }
+      }
+
+      return v8::Null(isolate);
     });
 
   } else if (type == "Identifier") {
     const std::string &name = json["name"].string_value();
-    return FilterFunc([isolate, name](const Packet &pkt) -> v8::Local<v8::Value> {
-      std::function<std::shared_ptr<Layer>(const std::string &name, const std::unordered_map<std::string, std::shared_ptr<Layer>> &)> findLayer;
-      findLayer = [&findLayer](const std::string &name, const std::unordered_map<std::string, std::shared_ptr<Layer>> &layers) {
+    return FilterFunc([isolate,
+                       name](const Packet &pkt) -> v8::Local<v8::Value> {
+      std::function<std::shared_ptr<Layer>(
+          const std::string &name,
+          const std::unordered_map<std::string, std::shared_ptr<Layer>> &)>
+          findLayer;
+      findLayer = [&findLayer](
+          const std::string &name,
+          const std::unordered_map<std::string, std::shared_ptr<Layer>>
+              &layers) {
         for (const auto &pair : layers) {
           if (pair.second->alias() == name) {
             return pair.second;
           }
         }
         for (const auto &pair : layers) {
-          const std::shared_ptr<Layer> &layer = findLayer(name, pair.second->layers());
+          const std::shared_ptr<Layer> &layer =
+              findLayer(name, pair.second->layers());
           if (layer) {
             return layer;
           }
@@ -89,17 +112,13 @@ FilterFunc makeFilter(const json11::Json &json) {
       };
       const std::shared_ptr<Layer> &layer = findLayer(name, pkt.layers());
       if (layer) {
-        v8::EscapableHandleScope scope(isolate);
-        printf(">> << %s\n", name.c_str());
-        return scope.Escape(v8pp::class_<Layer>::reference_external(isolate, layer.get()));
+        return v8pp::class_<Layer>::reference_external(isolate, layer.get());
       }
       return v8::Null(isolate);
     });
   }
 
-  return FilterFunc([isolate](const Packet &){
-    return v8::Null(isolate);
-  });
+  return FilterFunc([isolate](const Packet &) { return v8::Null(isolate); });
 }
 
 FilterThread::Private::Private(const std::shared_ptr<Context> &ctx) : ctx(ctx) {
@@ -146,6 +165,9 @@ FilterThread::Private::Private(const std::shared_ptr<Context> &ctx) : ctx(ctx) {
           lock.unlock();
           const std::shared_ptr<Packet> &pkt = ctx.store->get(seq);
           v8::Local<v8::Value> result = func(*pkt);
+
+          v8::String::Utf8Value utf8(result);
+          printf(">>> %s\n", *utf8);
           lock.lock();
           ctx.packets.insert(pkt->seq(), result->BooleanValue());
         }
