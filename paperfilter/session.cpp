@@ -36,7 +36,6 @@ public:
   std::unique_ptr<PacketDispatcher> packetDispatcher;
   std::unordered_map<std::string, FilterContext> filterThreads;
   std::string ns;
-  std::string filterScript;
 
   UniquePersistent<Function> statusCb;
   UniquePersistent<Function> logCb;
@@ -155,7 +154,6 @@ void Session::filter(const std::string &name, const std::string &filter) {
     context.ctx = std::make_shared<FilterThread::Context>();
     context.ctx->store = d->store.get();
     context.ctx->filter = filter;
-    context.ctx->script = d->filterScript;
     context.ctx->packets.addHandler(
         [this](uint32_t seq) { uv_async_send(&d->statusCbAsync); });
     context.ctx->logCb =
@@ -247,7 +245,6 @@ void Session::reset(v8::Local<v8::Object> opt) {
   Isolate *isolate = Isolate::GetCurrent();
 
   v8pp::get_option(isolate, opt, "namespace", d->ns);
-  v8pp::get_option(isolate, opt, "filterScript", d->filterScript);
 
   d->threads = std::thread::hardware_concurrency();
   v8pp::get_option(isolate, opt, "threads", d->threads);
