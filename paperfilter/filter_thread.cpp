@@ -26,10 +26,13 @@ public:
 };
 }
 
+typedef std::function<v8::Local<v8::Value>(const Packet &)> FilterFunc;
+
 class FilterThread::Private {
 public:
   Private(const std::shared_ptr<Context> &ctx);
   ~Private();
+  FilterFunc makeFilter(const json11::Json &json) const;
 
 public:
   std::thread thread;
@@ -38,9 +41,7 @@ public:
   bool closed = false;
 };
 
-typedef std::function<v8::Local<v8::Value>(const Packet &)> FilterFunc;
-
-FilterFunc makeFilter(const json11::Json &json) {
+FilterFunc FilterThread::Private::makeFilter(const json11::Json &json) const {
   v8::Isolate *isolate = v8::Isolate::GetCurrent();
 
   const std::string &type = json["type"].string_value();
@@ -83,7 +84,44 @@ FilterFunc makeFilter(const json11::Json &json) {
 
       return v8::Null(isolate);
     });
-
+  } else if (type == "BinaryExpression") {
+    const FilterFunc &lf = makeFilter(json["left"]);
+    const FilterFunc &rf = makeFilter(json["right"]);
+    const std::string &op = json["operator"].string_value();
+    if (op == ">") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Boolean::New(isolate, lf(pkt)->NumberValue() >
+                                             rf(pkt)->NumberValue());
+      });
+    } else if (op == "==") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Boolean::New(isolate, lf(pkt)->Equals(rf(pkt)));
+      });
+    }
+  } else if (type == "Literal") {
+    const json11::Json &regex = json["regex"];
+    if (regex.is_object()) {
+      const std::string &value = json["value"].string_value();
+      return FilterFunc(
+          [isolate, value](const Packet &pkt) -> v8::Local<v8::Value> {
+            Nan::MaybeLocal<Nan::BoundScript> script =
+                Nan::CompileScript(v8pp::to_v8(isolate, value));
+            if (!script.IsEmpty()) {
+              Nan::MaybeLocal<v8::Value> result =
+                  Nan::RunScript(script.ToLocalChecked());
+              if (!result.IsEmpty()) {
+                return result.ToLocalChecked();
+              }
+            }
+            return v8::Null(isolate);
+          });
+    } else {
+      const std::string &value = json["value"].dump();
+      return FilterFunc(
+          [isolate, value](const Packet &pkt) -> v8::Local<v8::Value> {
+            return v8pp::json_parse(isolate, value);
+          });
+    }
   } else if (type == "Identifier") {
     const std::string &name = json["name"].string_value();
     return FilterFunc([isolate,
