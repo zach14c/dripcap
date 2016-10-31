@@ -22,11 +22,19 @@ Console::Private::Private(
 void Console::Private::log(const v8::FunctionCallbackInfo<v8::Value> &args,
                            LogMessage::Level level) const {
 
-  v8::Isolate *isolate = v8::Isolate::GetCurrent();
   LogMessage msg;
   msg.level = level;
   msg.domain = domain;
-  msg.message = v8pp::from_v8<std::string>(isolate, args[0], "");
+  for (int i = 0; i < args.Length(); ++i) {
+    v8::String::Utf8Value str(args[i]);
+    if (*str) {
+      msg.message += *str;
+      msg.message += " ";
+    }
+  }
+  if (!msg.message.empty()) {
+    msg.message.resize(msg.message.size() - 1);
+  }
   if (logCb)
     logCb(msg);
 }
