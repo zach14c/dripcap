@@ -17,7 +17,7 @@ public:
   ArrayBufferAllocator() {}
   ~ArrayBufferAllocator() {}
 
-  virtual void *Allocate(size_t size) { return malloc(size); }
+  virtual void *Allocate(size_t size) { return calloc(1, size); }
   virtual void *AllocateUninitialized(size_t size) { return malloc(size); }
   virtual void Free(void *data, size_t) { free(data); }
 };
