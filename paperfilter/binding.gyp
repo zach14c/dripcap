@@ -25,11 +25,13 @@
             "dissector_thread.cpp",
             "stream_dissector_thread.cpp",
             "filter_thread.cpp",
-            "stream_dispatcher.cpp"
+            "stream_dispatcher.cpp",
+            "vendor/json11/json11.cpp"
          ],
          "include_dirs":[
             "<!(node -e \"require('nan')\")",
-            "vendor/v8pp"
+            "vendor/v8pp",
+            "vendor/json11"
          ],
          "cflags!":[
             "-fno-exceptions"

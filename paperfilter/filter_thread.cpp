@@ -1,6 +1,7 @@
 #include "filter_thread.hpp"
 #include "log_message.hpp"
 #include "packet.hpp"
+#include "layer.hpp"
 #include "packet_store.hpp"
 #include "paper_context.hpp"
 #include "console.hpp"
@@ -10,6 +11,7 @@
 #include <v8pp/class.hpp>
 #include <v8pp/json.hpp>
 #include <v8pp/object.hpp>
+#include <json11.hpp>
 
 namespace {
 class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
@@ -34,6 +36,71 @@ public:
   int storeHandlerId;
   bool closed = false;
 };
+
+typedef std::function<v8::Local<v8::Value>(const Packet &)> FilterFunc;
+
+FilterFunc makeFilter(const json11::Json &json) {
+  v8::Isolate *isolate = v8::Isolate::GetCurrent();
+
+  const std::string &type = json["type"].string_value();
+
+  if (type == "MemberExpression") {
+    const json11::Json& property = json["property"];
+    const std::string &propertyType = property["type"].string_value();
+    FilterFunc propertyFunc;
+
+    if (propertyType == "Identifier") {
+      const std::string &name = property["name"].string_value();
+      propertyFunc = [isolate, name](const Packet &) {
+        return v8pp::to_v8(isolate, name);
+      };
+    } else {
+      propertyFunc = makeFilter(property);
+    }
+
+    const FilterFunc &objectFunc = makeFilter(json["object"]);
+
+    return FilterFunc([isolate, objectFunc, propertyFunc](const Packet &pkt){
+
+      v8::Local<v8::Value> object = objectFunc(pkt);
+      v8::Local<v8::Value> property = propertyFunc(pkt);
+      v8::String::Utf8Value utf8(object.As<v8::Object>()->GetPropertyNames());
+      printf("%p %s\n", v8pp::class_<Layer>::unwrap_object(isolate, object), *utf8);
+      return v8pp::to_v8(isolate, rand() % 2);
+    });
+
+  } else if (type == "Identifier") {
+    const std::string &name = json["name"].string_value();
+    return FilterFunc([isolate, name](const Packet &pkt) -> v8::Local<v8::Value> {
+      std::function<std::shared_ptr<Layer>(const std::string &name, const std::unordered_map<std::string, std::shared_ptr<Layer>> &)> findLayer;
+      findLayer = [&findLayer](const std::string &name, const std::unordered_map<std::string, std::shared_ptr<Layer>> &layers) {
+        for (const auto &pair : layers) {
+          if (pair.second->alias() == name) {
+            return pair.second;
+          }
+        }
+        for (const auto &pair : layers) {
+          const std::shared_ptr<Layer> &layer = findLayer(name, pair.second->layers());
+          if (layer) {
+            return layer;
+          }
+        }
+        return std::shared_ptr<Layer>();
+      };
+      const std::shared_ptr<Layer> &layer = findLayer(name, pkt.layers());
+      if (layer) {
+        v8::EscapableHandleScope scope(isolate);
+        printf(">> << %s\n", name.c_str());
+        return scope.Escape(v8pp::class_<Layer>::reference_external(isolate, layer.get()));
+      }
+      return v8::Null(isolate);
+    });
+  }
+
+  return FilterFunc([isolate](const Packet &){
+    return v8::Null(isolate);
+  });
+}
 
 FilterThread::Private::Private(const std::shared_ptr<Context> &ctx) : ctx(ctx) {
   storeHandlerId = ctx->store->addHandler(
@@ -63,71 +130,24 @@ FilterThread::Private::Private(const std::shared_ptr<Context> &ctx) : ctx(ctx) {
       isolate->GetCurrentContext()->Global()->Set(
           v8pp::to_v8(isolate, "console"), console);
 
-      v8::Local<v8::Value> filter = v8pp::json_parse(isolate, ctx.filter);
-      v8::Local<v8::Object> moduleObj = v8::Object::New(isolate);
-      context->Global()->Set(v8::String::NewFromUtf8(isolate, "module"),
-                             moduleObj);
+      std::string err;
+      json11::Json json = json11::Json::parse(ctx.filter, err);
+      const FilterFunc &func = makeFilter(json);
 
-      v8::Local<v8::Function> func;
-      Nan::MaybeLocal<Nan::BoundScript> script = Nan::CompileScript(
-          v8pp::to_v8(isolate, "(function(){" + ctx.script + "})()"));
-
-      if (!script.IsEmpty()) {
-        Nan::RunScript(script.ToLocalChecked());
-        v8::Local<v8::Value> result =
-            moduleObj->Get(v8::String::NewFromUtf8(isolate, "exports"));
-
-        if (!result.IsEmpty() && result->IsFunction()) {
-          func = result.As<v8::Function>();
-        }
-      }
-
-      if (func.IsEmpty()) {
-        if (ctx.logCb) {
-          ctx.logCb(LogMessage::fromMessage(try_catch.Message(), "filter"));
-        }
-      } else {
-        v8::Handle<v8::Value> args[1] = {filter};
-        v8::Local<v8::Value> result =
-            func->Call(isolate->GetCurrentContext()->Global(), 1, args);
-        if (!result.IsEmpty() && result->IsFunction()) {
-          func = result.As<v8::Function>();
-        }
-      }
-
-      if (func.IsEmpty()) {
-        if (ctx.logCb) {
-          ctx.logCb(LogMessage::fromMessage(try_catch.Message(), "filter"));
-        }
-      } else {
-        while (true) {
-          std::unique_lock<std::mutex> lock(ctx.mutex);
-          ctx.cond.wait(lock, [this, &ctx] {
-            return ctx.maxSeq < ctx.store->maxSeq() || closed;
-          });
-          if (closed)
-            break;
-          if (ctx.maxSeq < ctx.store->maxSeq()) {
-            uint32_t seq = ++ctx.maxSeq;
-            lock.unlock();
-            const std::shared_ptr<Packet> &pkt = ctx.store->get(seq);
-            lock.lock();
-
-            v8::Handle<v8::Value> args[1] = {
-                v8pp::class_<Packet>::reference_external(isolate, pkt.get())};
-            v8::Local<v8::Value> result =
-                func->Call(isolate->GetCurrentContext()->Global(), 1, args);
-
-            v8pp::class_<Packet>::unreference_external(isolate, pkt.get());
-            if (result.IsEmpty()) {
-              if (ctx.logCb) {
-                ctx.logCb(
-                    LogMessage::fromMessage(try_catch.Message(), "filter"));
-              }
-            } else {
-              ctx.packets.insert(pkt->seq(), result->BooleanValue());
-            }
-          }
+      while (true) {
+        std::unique_lock<std::mutex> lock(ctx.mutex);
+        ctx.cond.wait(lock, [this, &ctx] {
+          return ctx.maxSeq < ctx.store->maxSeq() || closed;
+        });
+        if (closed)
+          break;
+        if (ctx.maxSeq < ctx.store->maxSeq()) {
+          uint32_t seq = ++ctx.maxSeq;
+          lock.unlock();
+          const std::shared_ptr<Packet> &pkt = ctx.store->get(seq);
+          v8::Local<v8::Value> result = func(*pkt);
+          lock.lock();
+          ctx.packets.insert(pkt->seq(), result->BooleanValue());
         }
       }
     }
