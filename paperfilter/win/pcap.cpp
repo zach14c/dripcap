@@ -116,6 +116,13 @@ void Pcap::setSnaplen(int len) { d->snaplen = len; }
 int Pcap::snaplen() const { return d->snaplen; }
 
 bool Pcap::setBPF(const std::string &filter, std::string *error) {
+  pcap_freecode(&d->bpf);
+  d->bpf.bf_len = 0;
+  d->bpf.bf_insns = nullptr;
+
+  if (filter.empty())
+    return true;
+
   char err[PCAP_ERRBUF_SIZE] = {'\0'};
   pcap_t *pcap = pcap_open_live(d->networkInterface.c_str(), d->snaplen,
                                 d->promiscuous, 1, err);
@@ -124,10 +131,6 @@ bool Pcap::setBPF(const std::string &filter, std::string *error) {
       error->assign(err);
     return false;
   }
-
-  pcap_freecode(&d->bpf);
-  d->bpf.bf_len = 0;
-  d->bpf.bf_insns = nullptr;
 
   if (pcap_compile(pcap, &d->bpf, filter.c_str(), true, PCAP_NETMASK_UNKNOWN) <
       0) {
