@@ -89,6 +89,75 @@ FilterFunc makeFilter(const json11::Json &json) {
             return v8pp::json_parse(isolate, value);
           });
     }
+
+  } else if (type == "LogicalExpression") {
+    const std::string &op = json["operator"].string_value();
+    const FilterFunc &lf = makeFilter(json["left"]);
+    const FilterFunc &rf = makeFilter(json["right"]);
+    if (op == "||") {
+      return FilterFunc(
+          [isolate, lf, rf](const Packet &pkt) -> v8::Local<v8::Value> {
+            v8::Local<v8::Value> value = lf(pkt);
+            return value->BooleanValue() ? value : rf(pkt);
+          });
+    } else {
+      return FilterFunc(
+          [isolate, lf, rf](const Packet &pkt) -> v8::Local<v8::Value> {
+            v8::Local<v8::Value> value = lf(pkt);
+            return !value->BooleanValue() ? value : rf(pkt);
+          });
+    }
+  } else if (type == "UnaryExpression") {
+    const FilterFunc &func = makeFilter(json["argument"]);
+    const std::string &op = json["operator"].string_value();
+    if (op == "+") {
+      return FilterFunc(
+          [isolate, func](const Packet &pkt) -> v8::Local<v8::Value> {
+            return v8pp::to_v8(isolate, func(pkt)->NumberValue());
+          });
+    } else if (op == "-") {
+      return FilterFunc(
+          [isolate, func](const Packet &pkt) -> v8::Local<v8::Value> {
+            return v8pp::to_v8(isolate, -func(pkt)->NumberValue());
+          });
+    } else if (op == "!") {
+      return FilterFunc(
+          [isolate, func](const Packet &pkt) -> v8::Local<v8::Value> {
+            return v8pp::to_v8(isolate, !func(pkt)->BooleanValue());
+          });
+    } else if (op == "~") {
+      return FilterFunc(
+          [isolate, func](const Packet &pkt) -> v8::Local<v8::Value> {
+            return v8pp::to_v8(isolate, ~func(pkt)->Int32Value());
+          });
+    }
+  } else if (type == "CallExpression") {
+    const FilterFunc &cf = makeFilter(json["callee"]);
+    std::vector<FilterFunc> argFuncs;
+    for (const json11::Json &item : json["arguments"].array_items()) {
+      argFuncs.push_back(makeFilter(item));
+    }
+    return FilterFunc([isolate, cf,
+                       argFuncs](const Packet &pkt) -> v8::Local<v8::Value> {
+      v8::Local<v8::Value> func = cf(pkt);
+      if (func->IsFunction()) {
+        std::vector<v8::Local<v8::Value>> args;
+        for (const FilterFunc &arg : argFuncs) {
+          args.push_back(arg(pkt));
+        }
+        return func.As<v8::Object>()->CallAsFunction(
+            isolate->GetCurrentContext()->Global(), args.size(), args.data());
+      }
+      return v8::Null(isolate);
+    });
+  } else if (type == "ConditionalExpression") {
+    const FilterFunc &tf = makeFilter(json["test"]);
+    const FilterFunc &cf = makeFilter(json["consequent"]);
+    const FilterFunc &af = makeFilter(json["alternate"]);
+    return FilterFunc(
+        [isolate, tf, cf, af](const Packet &pkt) -> v8::Local<v8::Value> {
+          return tf(pkt)->BooleanValue() ? cf(pkt) : af(pkt);
+        });
   } else if (type == "Identifier") {
     const std::string &name = json["name"].string_value();
     return FilterFunc([isolate,
@@ -135,36 +204,6 @@ FilterFunc makeFilter(const std::string &jsonstr) {
 /*
 module.exports = function makeFilter(node) {
   switch (node.type) {
-    case 'LogicalExpression':
-      switch (node.operator) {
-        case '||':
-          {
-            let lf = makeFilter(node.left);
-            let rf = makeFilter(node.right);
-            return pkt => lf(pkt) || rf(pkt);
-          }
-        case '&&':
-          {
-            let lf = makeFilter(node.left);
-            let rf = makeFilter(node.right);
-            return pkt => lf(pkt) && rf(pkt);
-          }
-        default:
-          throw new SyntaxError();
-      }
-    case 'ConditionalExpression':
-    {
-      let tf = makeFilter(node.test);
-      let cf = makeFilter(node.consequent);
-      let af = makeFilter(node.alternate);
-      return function(pkt) {
-        if (tf(pkt)) {
-          return cf(pkt);
-        } else {
-          return af(pkt);
-        }
-      };
-    }
     case 'BinaryExpression':
     {
       let lf = makeFilter(node.left);
@@ -216,54 +255,6 @@ module.exports = function makeFilter(node) {
           throw new SyntaxError();
       }
     }
-    case 'SequenceExpression':
-    {
-      let ef = node.expressions.map(e => makeFilter(e));
-      return function(pkt) {
-        let res = null;
-        for (let f of ef) {
-          res = f(pkt);
-        }
-        return res;
-      };
-    }
-    case 'CallExpression':
-    {
-      let cf = makeFilter(node.callee);
-      let af = node.arguments.map(a => makeFilter(a));
-      return function(pkt) {
-        let args = af.map(f => f(pkt));
-        let obj = cf(pkt);
-        if (obj != null) {
-          return obj.apply(this, args);
-        } else {
-          return null;
-        }
-      };
-    }
-    case 'UnaryExpression':
-    {
-      let f = makeFilter(node.argument);
-      switch (node.operator) {
-        case '+':
-          return pkt => +f(pkt);
-        case '-':
-          return pkt => -f(pkt);
-        case '!':
-          return pkt => !f(pkt);
-        case '~':
-          return pkt => ~f(pkt);
-        default:
-          throw new SyntaxError();
-      }
-    }
-    case 'Literal':
-      if (node.regex != null) {
-        let reg = new RegExp(node.regex.pattern, node.regex.flags);
-        return () => reg;
-      } else {
-        return () => node.value;
-      }
     case 'MemberExpression':
     {
       let objFunc = makeFilter(node.object);
