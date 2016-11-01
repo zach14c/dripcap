@@ -55,14 +55,84 @@ FilterFunc makeFilter(const json11::Json &json) {
     const FilterFunc &lf = makeFilter(json["left"]);
     const FilterFunc &rf = makeFilter(json["right"]);
     const std::string &op = json["operator"].string_value();
+
     if (op == ">") {
       return FilterFunc([isolate, lf, rf](const Packet &pkt) {
         return v8::Boolean::New(isolate, lf(pkt)->NumberValue() >
                                              rf(pkt)->NumberValue());
       });
+    } else if (op == "<") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Boolean::New(isolate, lf(pkt)->NumberValue() <
+                                             rf(pkt)->NumberValue());
+      });
+    } else if (op == ">=") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Boolean::New(isolate, lf(pkt)->NumberValue() >=
+                                             rf(pkt)->NumberValue());
+      });
+    } else if (op == "<=") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Boolean::New(isolate, lf(pkt)->NumberValue() <=
+                                             rf(pkt)->NumberValue());
+      });
     } else if (op == "==") {
       return FilterFunc([isolate, lf, rf](const Packet &pkt) {
         return v8::Boolean::New(isolate, lf(pkt)->Equals(rf(pkt)));
+      });
+    } else if (op == "!=") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Boolean::New(isolate, !lf(pkt)->Equals(rf(pkt)));
+      });
+    } else if (op == "+") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->NumberValue() + rf(pkt)->NumberValue());
+      });
+    } else if (op == "-") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->NumberValue() + rf(pkt)->NumberValue());
+      });
+    } else if (op == "*") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->NumberValue() + rf(pkt)->NumberValue());
+      });
+    } else if (op == "/") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->NumberValue() + rf(pkt)->NumberValue());
+      });
+    } else if (op == "%") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->Int32Value() % rf(pkt)->Int32Value());
+      });
+    } else if (op == "&") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->Int32Value() & rf(pkt)->Int32Value());
+      });
+    } else if (op == "|") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->Int32Value() | rf(pkt)->Int32Value());
+      });
+    } else if (op == "^") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->Int32Value() ^ rf(pkt)->Int32Value());
+      });
+    } else if (op == ">>") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate,
+                               lf(pkt)->Int32Value() >> rf(pkt)->Int32Value());
+      });
+    } else if (op == "<<") {
+      return FilterFunc([isolate, lf, rf](const Packet &pkt) {
+        return v8::Number::New(isolate, lf(pkt)->Int32Value()
+                                            << rf(pkt)->Int32Value());
       });
     }
   } else if (type == "Literal") {
@@ -204,57 +274,6 @@ FilterFunc makeFilter(const std::string &jsonstr) {
 /*
 module.exports = function makeFilter(node) {
   switch (node.type) {
-    case 'BinaryExpression':
-    {
-      let lf = makeFilter(node.left);
-      let rf = makeFilter(node.right);
-      switch (node.operator) {
-        case '>':
-          return pkt => lf(pkt) > rf(pkt);
-        case '<':
-          return pkt => lf(pkt) < rf(pkt);
-        case '<=':
-          return pkt => lf(pkt) <= rf(pkt);
-        case '>=':
-          return pkt => lf(pkt) >= rf(pkt);
-        case '==':
-          return function(pkt) {
-            let lhs = lf(pkt);
-            let rhs = rf(pkt);
-            if ((lhs != null) && (lhs.equals != null)) {
-              return lhs.equals(rhs);
-            }
-            if ((rhs != null) && (rhs.equals != null)) {
-              return rhs.equals(lhs);
-            }
-            return lhs === rhs;
-          };
-        case '!=':
-          return pkt => lf(pkt) !== rf(pkt);
-        case '+':
-          return pkt => lf(pkt) + rf(pkt);
-        case '-':
-          return pkt => lf(pkt) - rf(pkt);
-        case '*':
-          return pkt => lf(pkt) * rf(pkt);
-        case '/':
-          return pkt => lf(pkt) / rf(pkt);
-        case '%':
-          return pkt => lf(pkt) % rf(pkt);
-        case '&':
-          return pkt => lf(pkt) & rf(pkt);
-        case '|':
-          return pkt => lf(pkt) | rf(pkt);
-        case '^':
-          return pkt => lf(pkt) ^ rf(pkt);
-        case '>>':
-          return pkt => lf(pkt) >> rf(pkt);
-        case '<<':
-          return pkt => lf(pkt) << rf(pkt);
-        default:
-          throw new SyntaxError();
-      }
-    }
     case 'MemberExpression':
     {
       let objFunc = makeFilter(node.object);
