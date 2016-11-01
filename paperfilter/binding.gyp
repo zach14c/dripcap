@@ -24,6 +24,7 @@
             "dissector.cpp",
             "dissector_thread.cpp",
             "stream_dissector_thread.cpp",
+            "filter.cpp",
             "filter_thread.cpp",
             "stream_dispatcher.cpp",
             "vendor/json11/json11.cpp"
