@@ -6,7 +6,7 @@
 
 class Packet;
 
-typedef std::function<v8::Local<v8::Value>(const Packet &)> FilterFunc;
+typedef std::function<v8::Local<v8::Value>(Packet *)> FilterFunc;
 
 FilterFunc makeFilter(const std::string &jsonstr);
 

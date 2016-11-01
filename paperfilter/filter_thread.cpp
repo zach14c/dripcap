@@ -23,8 +23,6 @@ public:
 };
 }
 
-typedef std::function<v8::Local<v8::Value>(const Packet &)> FilterFunc;
-
 class FilterThread::Private {
 public:
   Private(const std::shared_ptr<Context> &ctx);
@@ -78,7 +76,7 @@ FilterThread::Private::Private(const std::shared_ptr<Context> &ctx) : ctx(ctx) {
           uint32_t seq = ++ctx.maxSeq;
           lock.unlock();
           const std::shared_ptr<Packet> &pkt = ctx.store->get(seq);
-          v8::Local<v8::Value> result = func(*pkt);
+          v8::Local<v8::Value> result = func(pkt.get());
 
           v8::String::Utf8Value utf8(result);
           printf(">>> %s\n", *utf8);
