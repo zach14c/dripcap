@@ -39,10 +39,6 @@ class Session extends EventEmitter {
      throw new Error('failed to load the native module');
     }
 
-    let module = {};
-    (new Function('module', option.filterScript))(module);
-    this._filter = module.exports;
-
     this._option = option;
     this._sess = new paperfilter.Session(option);
     this._sess.logCallback = (log) => {
@@ -88,9 +84,6 @@ class Session extends EventEmitter {
         }));
       }
     }
-    tasks.push(roll(__dirname + '/filter.es').then((code) => {
-      sessOption.filterScript = code;
-    }));
     return Promise.all(tasks).then(() => {
       return new Session(sessOption);
     });
@@ -110,7 +103,6 @@ class Session extends EventEmitter {
         const root = ast.body[0];
         if (root.type !== "ExpressionStatement")
           throw new SyntaxError();
-        this._filter(root.expression);
         body = JSON.stringify(root.expression);
         break;
       default:
