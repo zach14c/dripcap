@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "bindings": "~1.2.1",
-    "esprima": "^3.1.0",
+    "esprima": "^3.1.1",
     "rollup": "^0.36.3",
     "rollup-plugin-commonjs": "^5.0.5",
     "rollup-plugin-node-resolve": "^2.0.0"
