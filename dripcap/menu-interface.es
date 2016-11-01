@@ -106,20 +106,20 @@ export default class MenuInterface extends EventEmitter {
     return this._updateMainMenu();
   }
 
-  popup(name, self, browserWindow, x, y) {
+  popup(name, self, browserWindow, option = {}) {
     if (this._handlers[name] != null) {
       let menu = new Menu();
       let handlers = this._handlers[name];
       for (let i = 0; i < handlers.length; i++) {
         let h = handlers[i];
-        menu = h.handler.call(self, menu);
+        menu = h.handler.call(self, menu, option.event);
         if (i < handlers.length - 1) {
           menu.append(new MenuItem({
             type: 'separator'
           }));
         }
       }
-      return menu.popup(browserWindow, x, y);
+      return menu.popup(browserWindow, option.x, option.y);
     }
   }
 }

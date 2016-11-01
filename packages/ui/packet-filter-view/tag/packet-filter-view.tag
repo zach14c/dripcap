@@ -1,5 +1,5 @@
 <packet-filter-view>
-  <input class="compact" type="text" placeholder="Filter" name="filter" onkeypress={apply} oninput={change}>
+  <input class="compact" type="text" placeholder="Filter" name="filter" onkeypress={apply}>
 
   <style type="text/less" scoped>
     :scope {
@@ -18,19 +18,14 @@
       PubSub
     } from 'dripcap';
 
-    this.change = e => {
-      try {
-        $(this.filter).toggleClass('error', false);
-        this.filterText = $(e.target).val().trim();
-      } catch (error) {
-        $(this.filter).toggleClass('error', true);
-        this.filterText = null;
-      }
-    };
+    PubSub.sub('packet-filter-view:set-filter', (text) => {
+      $(this.filter).val(text);
+      PubSub.pub('packet-filter-view:filter', text);
+    });
 
     this.apply = e => {
-      if (e.charCode === 13 && (this.filterText != null)) {
-        PubSub.pub('packet-filter-view:filter', this.filterText);
+      if (e.charCode === 13) {
+        PubSub.pub('packet-filter-view:filter', $(this.filter).val());
       }
       return true;
     };

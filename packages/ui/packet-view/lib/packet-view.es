@@ -51,6 +51,18 @@ export default class PacketListView {
       return menu;
     };
 
+    this.filterMenu = function(menu, e) {
+      if (e.filterText) {
+        menu.append(new MenuItem({
+          label: 'Filter: ' + e.filterText,
+          click: () => {
+            PubSub.pub('packet-filter-view:set-filter', e.filterText);
+          }
+        }));
+      }
+      return menu;
+    };
+
     this.numValueMenu = function(menu, e) {
       let setBase = base => {
         return () => this.base = base;
@@ -153,17 +165,21 @@ export default class PacketListView {
     };
 
     Menu.register('packet-view:layer-menu', this.layerMenu);
+    Menu.register('packet-view:layer-menu', this.filterMenu);
     Menu.register('packet-view:layer-menu', this.copyMenu);
     Menu.register('packet-view:numeric-value-menu', this.numValueMenu);
     Menu.register('packet-view:numeric-value-menu', this.copyMenu);
+    Menu.register('packet-view:context-menu', this.filterMenu);
     Menu.register('packet-view:context-menu', this.copyMenu);
   }
 
   async deactivate() {
     Menu.unregister('packet-view:layer-menu', this.layerMenu);
+    Menu.unregister('packet-view:layer-menu', this.filterMenu);
     Menu.unregister('packet-view:layer-menu', this.copyMenu);
     Menu.unregister('packet-view:numeric-value-menu', this.numValueMenu);
     Menu.unregister('packet-view:numeric-value-menu', this.copyMenu);
+    Menu.unregister('packet-view:context-menu', this.filterMenu);
     Menu.unregister('packet-view:context-menu', this.copyMenu);
 
     let pkg = await Package.load('main-view');

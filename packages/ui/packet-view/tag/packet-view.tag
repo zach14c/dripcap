@@ -58,7 +58,7 @@
     this.base = 10;
 
     this.context = e => {
-      Menu.popup('packet-view:numeric-value-menu', this, remote.getCurrentWindow());
+      Menu.popup('packet-view:numeric-value-menu', this, remote.getCurrentWindow(), {event: e});
       e.stopPropagation();
     };
   </script>
@@ -117,7 +117,7 @@
 
   this.context = e => {
     if (window.getSelection().toString().length > 0) {
-      Menu.popup('packet-view:context-menu', this, remote.getCurrentWindow());
+      Menu.popup('packet-view:context-menu', this, remote.getCurrentWindow(), {event: e});
       e.stopPropagation();
     }
   };
@@ -196,7 +196,8 @@
 
   this.layerContext = e => {
     this.clickedLayerNamespace = e.item.ns;
-    Menu.popup('packet-view:layer-menu', this, remote.getCurrentWindow());
+    e.filterText = this.layer.alias;
+    Menu.popup('packet-view:layer-menu', this, remote.getCurrentWindow(), {event: e});
     e.stopPropagation();
   };
 
