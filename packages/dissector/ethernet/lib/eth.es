@@ -16,7 +16,8 @@ export default class Dissector {
     layer.addItem({
       name: 'Destination',
       value: destination,
-      range: '0:6'
+      range: '0:6',
+      attrs: { _filterHint: `${layer.alias}.dst == '${destination.data}'` }
     });
     layer.setAttr('dst', destination);
 
@@ -24,7 +25,8 @@ export default class Dissector {
     layer.addItem({
       name: 'Source',
       value: source,
-      range: '6:12'
+      range: '6:12',
+      attrs: { _filterHint: `${layer.alias}.src == '${source.data}'` }
     });
     layer.setAttr('src', source);
 
@@ -33,7 +35,7 @@ export default class Dissector {
     if (type <= 1500) {
       layer.addItem({
         name: 'Length',
-        value: new Value(type),
+        value: type,
         range: '12:14'
       });
     } else {
@@ -69,8 +71,9 @@ export default class Dissector {
     layer.payload = parentLayer.payload.slice(14);
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
-      range: '14:'
+      value: layer.payload,
+      range: '14:',
+      attrs: { _filterHint: `${layer.alias}.payload` }
     });
 
     return [layer];

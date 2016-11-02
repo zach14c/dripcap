@@ -12,43 +12,48 @@ export default class Dissector {
     layer.name = 'IPv4';
     layer.alias = 'ipv4';
 
-    let version = new Value(parentLayer.payload.readUInt8(0) >> 4);
+    let version = parentLayer.payload.readUInt8(0) >> 4;
     layer.addItem({
       name: 'Version',
       value: version,
-      range: '0:1'
+      range: '0:1',
+      attrs: { _filterHint: `${layer.alias}.version == ${version}` }
     });
     layer.setAttr('version', version);
 
-    let headerLength = new Value(parentLayer.payload.readUInt8(0) & 0b00001111);
+    let headerLength = parentLayer.payload.readUInt8(0) & 0b00001111;
     layer.addItem({
       name: 'Internet Header Length',
       value: headerLength,
-      range: '0:1'
+      range: '0:1',
+      attrs: { _filterHint: `${layer.alias}.headerLength == ${headerLength}` }
     });
     layer.setAttr('headerLength', headerLength);
 
-    let type = new Value(parentLayer.payload.readUInt8(1));
+    let type = parentLayer.payload.readUInt8(1);
     layer.addItem({
       name: 'Type of service',
       value: type,
-      range: '1:2'
+      range: '1:2',
+      attrs: { _filterHint: `${layer.alias}.type == ${type}` }
     });
     layer.setAttr('type', type);
 
-    let totalLength = new Value(parentLayer.payload.readUInt16BE(2));
+    let totalLength = parentLayer.payload.readUInt16BE(2);
     layer.addItem({
       name: 'Total Length',
       value: totalLength,
-      range: '2:4'
+      range: '2:4',
+      attrs: { _filterHint: `${layer.alias}.totalLength == ${totalLength}` }
     });
     layer.setAttr('totalLength', totalLength);
 
-    let id = new Value(parentLayer.payload.readUInt16BE(4));
+    let id = parentLayer.payload.readUInt16BE(4);
     layer.addItem({
       name: 'Identification',
       value: id,
-      range: '4:6'
+      range: '4:6',
+      attrs: { _filterHint: `${layer.alias}.id == ${id}` }
     });
     layer.setAttr('id', id);
 
@@ -67,20 +72,26 @@ export default class Dissector {
       items: [
         {
           name: 'Reserved',
-          value: new Value(flags.data['Reserved']),
+          value: flags.data['Reserved'],
           range: '6:7'
         },
         {
           name: 'Don\'t Fragment',
-          value: new Value(flags.data['Don\'t Fragment']),
-          range: '6:7'
+          value: flags.data['Don\'t Fragment'],
+          range: '6:7',
+          attrs: { _filterHint: `${layer.alias}.flags.DoNotFragment` }
         },
         {
           name: 'More Fragments',
-          value: new Value(flags.data['More Fragments']),
-          range: '6:7'
+          value: flags.data['More Fragments'],
+          range: '6:7',
+          attrs: { _filterHint: `${layer.alias}.flags.MoreFragments` }
         }
       ]
+    });
+    layer.setAttr('flags', {
+      DoNotFragment: flags.data['Don\'t Fragment'],
+      MoreFragments: flags.data['More Fragments']
     });
 
     let fragmentOffset = new Value(parentLayer.payload.readUInt8(6) & 0b0001111111111111);

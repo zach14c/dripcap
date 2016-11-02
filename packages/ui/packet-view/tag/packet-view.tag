@@ -117,6 +117,9 @@
 
   this.context = e => {
     if (window.getSelection().toString().length > 0) {
+      if (opts.field.attrs._filterHint) {
+        e.filterText = opts.field.attrs._filterHint.data;
+      }
       Menu.popup('packet-view:context-menu', this, remote.getCurrentWindow(), {event: e});
       e.stopPropagation();
     }
@@ -196,7 +199,11 @@
 
   this.layerContext = e => {
     this.clickedLayerNamespace = e.item.ns;
-    e.filterText = this.layer.alias;
+    if (opts.layer.attrs._filterHint) {
+      e.filterText = opts.layer.attrs._filterHint.data;
+    } else {
+      e.filterText = this.layer.alias;
+    }
     Menu.popup('packet-view:layer-menu', this, remote.getCurrentWindow(), {event: e});
     e.stopPropagation();
   };
