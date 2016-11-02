@@ -21,9 +21,13 @@ public:
 ItemValue::ItemValue() : d(new Private()) {}
 
 ItemValue::ItemValue(const v8::FunctionCallbackInfo<v8::Value> &args)
-    : ItemValue() {
+    : ItemValue(args[0]) {
   v8::Isolate *isolate = v8::Isolate::GetCurrent();
-  v8::Local<v8::Value> val = args[0];
+  d->type = v8pp::from_v8<std::string>(isolate, args[1], "");
+}
+
+ItemValue::ItemValue(const v8::Local<v8::Value> &val) : ItemValue() {
+  v8::Isolate *isolate = v8::Isolate::GetCurrent();
   if (!val.IsEmpty()) {
     if (val->IsNumber()) {
       d->num = val->NumberValue();
@@ -49,7 +53,6 @@ ItemValue::ItemValue(const v8::FunctionCallbackInfo<v8::Value> &args)
       }
     }
   }
-  d->type = v8pp::from_v8<std::string>(isolate, args[1], "");
 }
 
 ItemValue::ItemValue(const ItemValue &value) : ItemValue() { *this = value; }

@@ -48,7 +48,7 @@ Item::Item(v8::Local<v8::Value> value) : d(new Private()) {
         const std::string &keyStr =
             v8pp::from_v8<std::string>(isolate, key, "");
         if (!keyStr.empty()) {
-          setAttrObject(keyStr, obj->Get(key));
+          setAttr(keyStr, obj->Get(key));
         }
       }
     }
@@ -93,10 +93,12 @@ void Item::addItem(v8::Local<v8::Object> obj) {
   }
 }
 
-void Item::setAttrObject(const std::string &name, v8::Local<v8::Value> obj) {
+void Item::setAttr(const std::string &name, v8::Local<v8::Value> obj) {
   Isolate *isolate = Isolate::GetCurrent();
   if (ItemValue *item = v8pp::class_<ItemValue>::unwrap_object(isolate, obj)) {
     d->attrs.emplace(name, *item);
+  } else {
+    d->attrs.emplace(name, ItemValue(obj));
   }
 }
 

@@ -133,10 +133,12 @@ v8::Local<v8::Object> Layer::payloadBuffer() const {
   }
 }
 
-void Layer::setAttr(const std::string &name, v8::Local<v8::Object> obj) {
+void Layer::setAttr(const std::string &name, v8::Local<v8::Value> obj) {
   Isolate *isolate = Isolate::GetCurrent();
   if (ItemValue *item = v8pp::class_<ItemValue>::unwrap_object(isolate, obj)) {
     d->attrs.emplace(name, *item);
+  } else {
+    d->attrs.emplace(name, ItemValue(obj));
   }
 }
 

@@ -14,6 +14,7 @@ public:
 public:
   ItemValue();
   explicit ItemValue(const v8::FunctionCallbackInfo<v8::Value> &args);
+  explicit ItemValue(const v8::Local<v8::Value> &val);
   ItemValue(const ItemValue &value);
   ItemValue &operator=(const ItemValue &);
   ~ItemValue();

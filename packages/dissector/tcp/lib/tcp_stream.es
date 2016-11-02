@@ -20,7 +20,7 @@ export default class Dissector {
 
       if (this.seq < 0) {
         this.length += payload.length;
-        stream.setAttr('payload', new Value(payload));
+        stream.setAttr('payload', payload);
       } else {
         let start = this.seq + this.length;
         let length = payload.length;
@@ -28,7 +28,7 @@ export default class Dissector {
           length -= (start - seq);
         }
         this.length += length;
-        stream.setAttr('payload', new Value(payload));
+        stream.setAttr('payload', payload);
       }
       this.seq = seq;
       return [stream];
