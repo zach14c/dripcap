@@ -4,6 +4,7 @@
 
   <style type="text/less" scoped>
     :scope {
+      outline-offset: -5px;
       div.main {
         align-self: stretch;
         border-spacing: 0;
