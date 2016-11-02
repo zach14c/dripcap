@@ -42,13 +42,13 @@ Item::Item(v8::Local<v8::Value> value) : d(new Private()) {
 
     v8::Local<v8::Object> attrs;
     if (v8pp::get_option(isolate, obj, "attrs", attrs)) {
-      v8::Local<v8::Array> keys = obj->GetPropertyNames();
+      v8::Local<v8::Array> keys = attrs->GetPropertyNames();
       for (uint32_t i = 0; i < keys->Length(); ++i) {
         v8::Local<v8::Value> key = keys->Get(i);
         const std::string &keyStr =
             v8pp::from_v8<std::string>(isolate, key, "");
         if (!keyStr.empty()) {
-          setAttr(keyStr, obj->Get(key));
+          setAttr(keyStr, attrs->Get(key));
         }
       }
     }
