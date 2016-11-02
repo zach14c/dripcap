@@ -92,9 +92,14 @@ export default class KeybindInterface extends EventEmitter {
             if (!sel.startsWith('!')) {
               if ($(e.target).is(sel) || $(e.target).parents(sel).length) {
                 if (_.isFunction(act)) {
-                  act(e);
+                  if (act(e) === false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
                 } else {
                   this.parent.action.emit(act);
+                  e.preventDefault();
+                  e.stopPropagation();
                 }
               }
             }
