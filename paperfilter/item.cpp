@@ -26,9 +26,14 @@ Item::Item(v8::Local<v8::Value> value) : d(new Private()) {
     v8pp::get_option(isolate, obj, "name", d->name);
     v8pp::get_option(isolate, obj, "range", d->range);
 
-    v8::Local<v8::Object> value;
+    v8::Local<v8::Value> value;
     if (v8pp::get_option(isolate, obj, "value", value)) {
-      setValue(value);
+      if (ItemValue *iv =
+              v8pp::class_<ItemValue>::unwrap_object(isolate, value)) {
+        d->value = *iv;
+      } else {
+        d->value = ItemValue(value);
+      }
     }
 
     v8::Local<v8::Array> items;
