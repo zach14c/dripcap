@@ -80,9 +80,9 @@
 <packet-view-item>
 <li>
   <p class="label list-item" onclick={ toggle } range={ opts.field.range } oncontextmenu={ context } onmouseover={ fieldRange } onmouseout={ rangeOut }>
-    <i class="fa fa-circle-o" show={ !opts.field.children.length }></i>
-    <i class="fa fa-arrow-circle-right" show={ opts.field.children.length && !show }></i>
-    <i class="fa fa-arrow-circle-down" show={ opts.field.children.length && show }></i>
+    <i class="fa fa-circle-o" show={ !opts.field.items.length }></i>
+    <i class="fa fa-arrow-circle-right" show={ opts.field.items.length && !show }></i>
+    <i class="fa fa-arrow-circle-down" show={ opts.field.items.length && show }></i>
     <a class="text-label">{ opts.field.name }:</a>
     <packet-view-boolean-value if={ type=='boolean' } val={ val }></packet-view-boolean-value>
     <packet-view-integer-value if={ type=='integer' } val={ val }></packet-view-integer-value>
@@ -91,8 +91,8 @@
     <packet-view-stream-value if={ type=='stream' } val={ val }></packet-view-stream-value>
     <packet-view-custom-value if={ type=='custom' } tag={ tag } val={ val }></packet-view-custom-value>
   </p>
-  <ul show={ opts.field.children.length && show }>
-    <packet-view-item each={ f in opts.field.children } layer={ opts.layer } field={ f }></packet-view-item>
+  <ul show={ opts.field.items.length && show }>
+    <packet-view-item each={ f in opts.field.items } layer={ opts.layer } field={ f }></packet-view-item>
   </ul>
 </li>
 
@@ -103,7 +103,7 @@
   this.show = false;
 
   this.toggle = e => {
-    if (opts.field.children.length) {
+    if (opts.field.items.length) {
       this.show = !this.show;
     }
     e.stopPropagation();

@@ -80,7 +80,7 @@ export default class Dissector {
       name: 'Flags',
       value: flags,
       data: '12:14',
-      children: [
+      items: [
         {
           name: 'NS',
           value: new Value(flags.data['NS']),
@@ -158,7 +158,7 @@ export default class Dissector {
     let option = {
       name: 'Options',
       range: '20:' + optionDataOffset,
-      children: []
+      items: []
     };
 
     let optionOffset = 20;
@@ -170,7 +170,7 @@ export default class Dissector {
           break;
 
         case 1:
-          option.children.push({
+          option.items.push({
             name: 'NOP',
             range: `${optionOffset}:${optionOffset + 1}`
           });
@@ -179,7 +179,7 @@ export default class Dissector {
 
         case 2:
           optionItems.push('Maximum segment size');
-          option.children.push({
+          option.items.push({
             name: 'Maximum segment size',
             value: new Value(parentLayer.payload.readUInt16BE(optionOffset + 2)),
             range: `${optionOffset}:${optionOffset + 4}`
@@ -189,7 +189,7 @@ export default class Dissector {
 
         case 3:
           optionItems.push('Window scale');
-          option.children.push({
+          option.items.push({
             name: 'Window scale',
             value: new Value(parentLayer.payload.readUInt8(optionOffset + 2)),
             range: `${optionOffset}:${optionOffset + 3}`
@@ -199,7 +199,7 @@ export default class Dissector {
 
         case 4:
           optionItems.push('Selective ACK permitted');
-          option.children.push({
+          option.items.push({
             name: 'Selective ACK permitted',
             range: `${optionOffset}:${optionOffset + 2}`
           });
@@ -210,7 +210,7 @@ export default class Dissector {
         case 5:
           let length = parentLayer.payload.readUInt8(optionOffset + 1);
           optionItems.push('Selective ACK');
-          option.children.push({
+          option.items.push({
             name: 'Selective ACK',
             value: new Value(parentLayer.payload.slice(optionOffset + 2, optionOffset + length)),
             data: `${optionOffset}:${optionOffset + length}`
@@ -223,11 +223,11 @@ export default class Dissector {
           let mt = parentLayer.payload.readUInt32BE(optionOffset + 2);
           let et = parentLayer.payload.readUInt32BE(optionOffset + 2);
           optionItems.push('Timestamps');
-          option.children.push({
+          option.items.push({
             name: 'Timestamps',
             value: new Value(`${mt} - ${et}`),
             range: `${optionOffset}:${optionOffset + 10}`,
-            children: [{
+            items: [{
               name: 'My timestamp',
               value: new Value(mt),
               range: `${optionOffset + 2}:${optionOffset + 6}`

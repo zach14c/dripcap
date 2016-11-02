@@ -94,7 +94,7 @@ export default class IPv6Dissector {
           item = {
             name: name,
             range: `${offset}:${offset + extLen}`,
-            children: [{
+            items: [{
               name: 'Hdr Ext Len',
               value: new Value(parentLayer.payload.readUInt8(offset + 1)),
               range: `${offset + 1}:${offset + 2}`
@@ -120,7 +120,7 @@ export default class IPv6Dissector {
 
       nextHeader = parentLayer.payload.readUInt8(offset);
       nextHeaderRange = `${offset}:${offset + 1}`;
-      item.children.unshift({
+      item.items.unshift({
         name: 'Next Header',
         value: Enum(protocolTable, nextHeader),
         range: nextHeaderRange

@@ -12,7 +12,7 @@ private:
   SessionItemWrapper(const SessionItemWrapper &) = delete;
   SessionItemWrapper &operator=(const SessionItemWrapper &) = delete;
 
-  v8::UniquePersistent<v8::Object> childrenCache;
+  v8::UniquePersistent<v8::Object> itemsCache;
   v8::UniquePersistent<v8::Object> attrsCache;
 
 public:
@@ -24,7 +24,7 @@ public:
     Nan::SetAccessor(otl, Nan::New("name").ToLocalChecked(), name);
     Nan::SetAccessor(otl, Nan::New("range").ToLocalChecked(), range);
     Nan::SetAccessor(otl, Nan::New("value").ToLocalChecked(), value);
-    Nan::SetAccessor(otl, Nan::New("children").ToLocalChecked(), children);
+    Nan::SetAccessor(otl, Nan::New("items").ToLocalChecked(), items);
     Nan::SetAccessor(otl, Nan::New("attrs").ToLocalChecked(), attrs);
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
   }
@@ -57,23 +57,23 @@ public:
         SessionItemValueWrapper::create(wrapper->item.value()));
   }
 
-  static NAN_GETTER(children) {
+  static NAN_GETTER(items) {
     v8::Isolate *isolate = v8::Isolate::GetCurrent();
     SessionItemWrapper *wrapper =
         ObjectWrap::Unwrap<SessionItemWrapper>(info.Holder());
 
     v8::Local<v8::Object> obj;
 
-    if (wrapper->childrenCache.IsEmpty()) {
-      const auto &items = wrapper->item.children();
+    if (wrapper->itemsCache.IsEmpty()) {
+      const auto &items = wrapper->item.items();
       v8::Local<v8::Array> array = v8::Array::New(isolate, items.size());
       for (size_t i = 0; i < items.size(); ++i) {
         array->Set(i, SessionItemWrapper::create(items[i]));
       }
       obj = array;
-      wrapper->childrenCache = v8::UniquePersistent<v8::Object>(isolate, obj);
+      wrapper->itemsCache = v8::UniquePersistent<v8::Object>(isolate, obj);
     } else {
-      obj = v8::Local<v8::Object>::New(isolate, wrapper->childrenCache);
+      obj = v8::Local<v8::Object>::New(isolate, wrapper->itemsCache);
     }
 
     info.GetReturnValue().Set(obj);

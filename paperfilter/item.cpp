@@ -11,7 +11,7 @@ public:
   std::string name;
   std::string range;
   ItemValue value;
-  std::vector<Item> children;
+  std::vector<Item> items;
   std::unordered_map<std::string, ItemValue> attrs;
 };
 
@@ -31,12 +31,12 @@ Item::Item(v8::Local<v8::Value> value) : d(new Private()) {
       setValue(value);
     }
 
-    v8::Local<v8::Array> children;
-    if (v8pp::get_option(isolate, obj, "children", children)) {
-      for (uint32_t i = 0; i < children->Length(); ++i) {
-        v8::Local<v8::Value> child = children->Get(i);
-        if (child->IsObject())
-          addChild(child.As<v8::Object>());
+    v8::Local<v8::Array> items;
+    if (v8pp::get_option(isolate, obj, "items", items)) {
+      for (uint32_t i = 0; i < items->Length(); ++i) {
+        v8::Local<v8::Value> item = items->Get(i);
+        if (item->IsObject())
+          addItem(item.As<v8::Object>());
       }
     }
   }
@@ -69,14 +69,14 @@ void Item::setValue(v8::Local<v8::Object> value) {
   }
 }
 
-std::vector<Item> Item::children() const { return d->children; }
+std::vector<Item> Item::items() const { return d->items; }
 
-void Item::addChild(v8::Local<v8::Object> obj) {
+void Item::addItem(v8::Local<v8::Object> obj) {
   Isolate *isolate = Isolate::GetCurrent();
   if (Item *item = v8pp::class_<Item>::unwrap_object(isolate, obj)) {
-    d->children.emplace_back(*item);
+    d->items.emplace_back(*item);
   } else if (obj->IsObject()) {
-    d->children.emplace_back(obj);
+    d->items.emplace_back(obj);
   }
 }
 

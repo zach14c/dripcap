@@ -24,8 +24,8 @@ public:
   ItemValue value() const;
   void setValue(v8::Local<v8::Object> value);
 
-  std::vector<Item> children() const;
-  void addChild(v8::Local<v8::Object> obj);
+  std::vector<Item> items() const;
+  void addItem(v8::Local<v8::Object> obj);
 
   void setAttrObject(const std::string &name, v8::Local<v8::Object> obj);
   std::unordered_map<std::string, ItemValue> attrs() const;

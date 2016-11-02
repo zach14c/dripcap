@@ -64,7 +64,7 @@ export default class Dissector {
       name: 'Flags',
       value: flags,
       range: '6:7',
-      children: [
+      items: [
         {
           name: 'Reserved',
           value: new Value(flags.data['Reserved']),
