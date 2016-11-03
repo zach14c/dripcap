@@ -2,25 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import _ from 'underscore';
 import config from 'dripcap/config';
-import babelTemplate from 'babel-template';
 import {
   EventEmitter
 } from 'events';
-
-function globalPaths() {
-  return {
-    visitor: {
-      Program: {
-        exit: function(p) {
-          let modulePath = path.resolve(__dirname, '..').split(path.sep).join('/');
-          let code = `require('module').globalPaths.push('${modulePath}');`;
-          let node = babelTemplate(code)();
-          p.unshiftContainer('body', [node]);
-        },
-      },
-    },
-  };
-}
 
 export default class Package extends EventEmitter {
   constructor(jsonPath, profile) {
