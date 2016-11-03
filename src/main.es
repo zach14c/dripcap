@@ -83,6 +83,8 @@ class Dripcap {
 
 const dripcap = new Dripcap();
 
+app.commandLine.appendSwitch('js-flags', '--harmony-async-await');
+
 app.on('quit', () => {
   if (Session.tmpDir) {
     rimraf(Session.tmpDir, () => {});
