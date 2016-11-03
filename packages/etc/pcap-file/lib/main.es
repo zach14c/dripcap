@@ -129,7 +129,6 @@ export default class PcapFile {
     }
     Session.list = [sess];
     Session.emit('created', sess);
-    await sess.start();
     for (let pkt of pcap.packets) {
       sess.analyze(pkt);
     }
