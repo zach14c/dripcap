@@ -11,10 +11,10 @@ export default class DNSDissector {
     layer.name = 'DNS';
     layer.alias = 'dns';
 
-    let id = new Value(parentLayer.payload.readUInt16BE(0));
+    let id = parentLayer.payload.readUInt16BE(0);
     let flags0 = parentLayer.payload.readUInt8(2);
     let flags1 = parentLayer.payload.readUInt8(3);
-    let qr = new Value(!!(flags0 >> 7));
+    let qr = !!(flags0 >> 7);
 
     let opcodeNumber = (flags0 >> 3) & 0b00001111;
     if (!(opcodeNumber in operationTable)) {
@@ -23,10 +23,10 @@ export default class DNSDissector {
     let opcode = Enum(operationTable, opcodeNumber);
     let opcodeName = operationTable[opcodeNumber];
 
-    let aa = new Value(!!((flags0 >> 2) & 1));
-    let tc = new Value(!!((flags0 >> 1) & 1));
-    let rd = new Value(!!((flags0 >> 0) & 1));
-    let ra = new Value(!!(flags1 >> 7));
+    let aa = !!((flags0 >> 2) & 1);
+    let tc = !!((flags0 >> 1) & 1);
+    let rd = !!((flags0 >> 0) & 1);
+    let ra = !!(flags1 >> 7);
 
     if (flags1 & 0b01110000) {
       throw new Error('reserved bits must be zero');
@@ -39,10 +39,10 @@ export default class DNSDissector {
     let rcode = Enum(recordTable, rcodeNumber);
     let rcodeName = recordTable[rcodeNumber];
 
-    let qdCount = new Value(parentLayer.payload.readUInt16BE(4));
-    let anCount = new Value(parentLayer.payload.readUInt16BE(6));
-    let nsCount = new Value(parentLayer.payload.readUInt16BE(8));
-    let arCount = new Value(parentLayer.payload.readUInt16BE(10));
+    let qdCount = parentLayer.payload.readUInt16BE(4);
+    let anCount = parentLayer.payload.readUInt16BE(6);
+    let nsCount = parentLayer.payload.readUInt16BE(8);
+    let arCount = parentLayer.payload.readUInt16BE(10);
 
     layer.addItem({
       name: 'ID',
@@ -131,11 +131,11 @@ export default class DNSDissector {
     layer.payload = parentLayer.payload.slice(12);
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
+      value: layer.payload,
       range: '12:'
     });
 
-    layer.summary = `[${opcodeName}] [${rcodeName}] qd:${qdCount.data} an:${anCount.data} ns:${nsCount.data} ar:${arCount.data}`;
+    layer.summary = `[${opcodeName}] [${rcodeName}] qd:${qdCount} an:${anCount} ns:${nsCount} ar:${arCount}`;
     return [layer];
   }
 }

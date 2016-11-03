@@ -12,7 +12,7 @@ export default class IPv6Dissector {
     layer.name = 'IPv6';
     layer.alias = 'ipv6';
 
-    let version = new Value(parentLayer.payload.readUInt8(0) >> 4);
+    let version = parentLayer.payload.readUInt8(0) >> 4;
     layer.addItem({
       name: 'Version',
       value: version,
@@ -20,9 +20,9 @@ export default class IPv6Dissector {
     });
     layer.setAttr('version', version);
 
-    let trafficClass = new Value(
+    let trafficClass =
       ((parentLayer.payload.readUInt8(0, true) & 0b00001111) << 4) |
-      ((parentLayer.payload.readUInt8(1, true) & 0b11110000) >> 4));
+      ((parentLayer.payload.readUInt8(1, true) & 0b11110000) >> 4);
     layer.addItem({
       name: 'Traffic Class',
       value: trafficClass,
@@ -30,8 +30,8 @@ export default class IPv6Dissector {
     });
     layer.setAttr('trafficClass', trafficClass);
 
-    let flowLevel = new Value(parentLayer.payload.readUInt16BE(2) |
-      ((parentLayer.payload.readUInt8(1, true) & 0b00001111) << 16));
+    let flowLevel = parentLayer.payload.readUInt16BE(2) |
+      ((parentLayer.payload.readUInt8(1, true) & 0b00001111) << 16);
     layer.addItem({
       name: 'Flow Label',
       value: flowLevel,
@@ -39,7 +39,7 @@ export default class IPv6Dissector {
     });
     layer.setAttr('flowLevel', flowLevel);
 
-    let payloadLength = new Value(parentLayer.payload.readUInt16BE(4));
+    let payloadLength = parentLayer.payload.readUInt16BE(4);
     layer.addItem({
       name: 'Payload Length',
       value: payloadLength,
@@ -56,7 +56,7 @@ export default class IPv6Dissector {
       range: nextHeaderRange
     });
 
-    let hopLimit = new Value(parentLayer.payload.readUInt8(7, true));
+    let hopLimit = parentLayer.payload.readUInt8(7, true);
     layer.addItem({
       name: 'Hop Limit',
       value: hopLimit,
@@ -96,11 +96,11 @@ export default class IPv6Dissector {
             range: `${offset}:${offset + extLen}`,
             items: [{
               name: 'Hdr Ext Len',
-              value: new Value(parentLayer.payload.readUInt8(offset + 1)),
+              value: parentLayer.payload.readUInt8(offset + 1),
               range: `${offset + 1}:${offset + 2}`
             }, {
               name: 'Options and Padding',
-              value: new Value(parentLayer.payload.slice(offset + 2, offset + extLen)),
+              value: parentLayer.payload.slice(offset + 2, offset + extLen),
               range: `${offset + 2}:${offset + extLen}`
             }]
           };
@@ -148,7 +148,7 @@ export default class IPv6Dissector {
 
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
+      value: layer.payload,
       range: offset + ':'
     });
 

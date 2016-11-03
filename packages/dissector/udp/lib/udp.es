@@ -15,14 +15,14 @@ export default class UDPDissector {
     let source = parentLayer.payload.readUInt16BE(0);
     layer.addItem({
       name: 'Source port',
-      value: new Value(source),
+      value: source,
       range: '0:2'
     });
 
     let destination = parentLayer.payload.readUInt16BE(2);
     layer.addItem({
       name: 'Destination port',
-      value: new Value(destination),
+      value: destination,
       range: '2:4'
     });
 
@@ -36,7 +36,7 @@ export default class UDPDissector {
       layer.setAttr('dst', IPv6Host(dstAddr.data, destination));
     }
 
-    let length = new Value(parentLayer.payload.readUInt16BE(4));
+    let length = parentLayer.payload.readUInt16BE(4);
     layer.addItem({
       name: 'Length',
       value: length,
@@ -44,7 +44,7 @@ export default class UDPDissector {
     });
     layer.setAttr('length', length);
 
-    let checksum = new Value(parentLayer.payload.readUInt16BE(6));
+    let checksum = parentLayer.payload.readUInt16BE(6);
     layer.addItem({
       name: 'Checksum',
       value: checksum,
@@ -52,13 +52,13 @@ export default class UDPDissector {
     });
     layer.setAttr('checksum', checksum);
 
-    layer.range = '8:'+ length.data;
-    layer.payload = parentLayer.payload.slice(8, length.data);
+    layer.range = '8:'+ length;
+    layer.payload = parentLayer.payload.slice(8, length);
 
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
-      range: '8:' + length.data
+      value: layer.payload,
+      range: '8:' + length
     });
 
     layer.summary = `${layer.attr('src').data} -> ${layer.attr('dst').data}`;

@@ -19,8 +19,8 @@ export default class Dissector {
       large.write(payload);
       layer.payload = large;
 
-      let method = new Value(m[1]);
-      let cursor = method.data.length;
+      let method = m[1];
+      let cursor = method.length;
 
       layer.addItem({
         name: 'Method',
@@ -29,21 +29,21 @@ export default class Dissector {
       });
       layer.setAttr('method', method);
 
-      let path = new Value(m[2]);
+      let path = m[2];
       cursor++;
       layer.addItem({
         name: 'Path',
         value: path,
-        range: cursor + ':' + (cursor + path.data.length)
+        range: cursor + ':' + (cursor + path.length)
       });
       layer.setAttr('path', path);
 
-      let version = new Value(m[3]);
-      cursor += path.data.length + 1;
+      let version = m[3];
+      cursor += path.length + 1;
       layer.addItem({
         name: 'Version',
         value: version,
-        range: cursor + ':' + (cursor + version.data.length)
+        range: cursor + ':' + (cursor + version.length)
       });
 
       layer.setAttr('version', version);

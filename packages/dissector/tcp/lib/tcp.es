@@ -16,14 +16,14 @@ export default class Dissector {
     let source = parentLayer.payload.readUInt16BE(0);
     layer.addItem({
       name: 'Source port',
-      value: new Value(source),
+      value: source,
       range: '0:2'
     });
 
     let destination = parentLayer.payload.readUInt16BE(2);
     layer.addItem({
       name: 'Destination port',
-      value: new Value(destination),
+      value: destination,
       range: '2:4'
     });
 
@@ -37,7 +37,7 @@ export default class Dissector {
       layer.setAttr('dst', IPv6Host(dstAddr.data, destination));
     }
 
-    let seq = new Value(parentLayer.payload.readUInt32BE(4));
+    let seq = parentLayer.payload.readUInt32BE(4);
     layer.addItem({
       name: 'Sequence number',
       value: seq,
@@ -45,7 +45,7 @@ export default class Dissector {
     });
     layer.setAttr('seq', seq);
 
-    let ack = new Value(parentLayer.payload.readUInt32BE(8));
+    let ack = parentLayer.payload.readUInt32BE(8);
     layer.addItem({
       name: 'Acknowledgment number',
       value: ack,
@@ -53,7 +53,7 @@ export default class Dissector {
     });
     layer.setAttr('ack', ack);
 
-    let dataOffset = new Value(parentLayer.payload.readUInt8(12) >> 4);
+    let dataOffset = parentLayer.payload.readUInt8(12) >> 4;
     layer.addItem({
       name: 'Data offset',
       value: dataOffset,
@@ -83,53 +83,53 @@ export default class Dissector {
       items: [
         {
           name: 'NS',
-          value: new Value(flags.data['NS']),
+          value: flags.data['NS'],
           range: '12:13'
         },
         {
           name: 'CWR',
-          value: new Value(flags.data['CWR']),
+          value: flags.data['CWR'],
           range: '13:14'
         },
         {
           name: 'ECE',
-          value: new Value(flags.data['ECE']),
+          value: flags.data['ECE'],
           range: '13:14'
         },
         {
           name: 'URG',
-          value: new Value(flags.data['URG']),
+          value: flags.data['URG'],
           range: '13:14'
         },
         {
           name: 'ACK',
-          value: new Value(flags.data['ACK']),
+          value: flags.data['ACK'],
           range: '13:14'
         },
         {
           name: 'PSH',
-          value: new Value(flags.data['PSH']),
+          value: flags.data['PSH'],
           range: '13:14'
         },
         {
           name: 'RST',
-          value: new Value(flags.data['RST']),
+          value: flags.data['RST'],
           range: '13:14'
         },
         {
           name: 'SYN',
-          value: new Value(flags.data['SYN']),
+          value: flags.data['SYN'],
           range: '13:14'
         },
         {
           name: 'FIN',
-          value: new Value(flags.data['FIN']),
+          value: flags.data['FIN'],
           range: '13:14'
         }
       ]
     });
 
-    let window = new Value(parentLayer.payload.readUInt16BE(14));
+    let window = parentLayer.payload.readUInt16BE(14);
     layer.addItem({
       name: 'Window size',
       value: window,
@@ -137,7 +137,7 @@ export default class Dissector {
     });
     layer.setAttr('window', window);
 
-    let checksum = new Value(parentLayer.payload.readUInt16BE(16));
+    let checksum = parentLayer.payload.readUInt16BE(16);
     layer.addItem({
       name: 'Checksum',
       value: checksum,
@@ -145,7 +145,7 @@ export default class Dissector {
     });
     layer.setAttr('checksum', checksum);
 
-    let urgent = new Value(parentLayer.payload.readUInt16BE(18));
+    let urgent = parentLayer.payload.readUInt16BE(18);
     layer.addItem({
       name: 'Urgent pointer',
       value: urgent,
@@ -153,7 +153,7 @@ export default class Dissector {
     })
     layer.setAttr('urgent', urgent);
 
-    let optionDataOffset = dataOffset.data * 4;
+    let optionDataOffset = dataOffset * 4;
     let optionItems = [];
     let option = {
       name: 'Options',
@@ -181,7 +181,7 @@ export default class Dissector {
           optionItems.push('Maximum segment size');
           option.items.push({
             name: 'Maximum segment size',
-            value: new Value(parentLayer.payload.readUInt16BE(optionOffset + 2)),
+            value: parentLayer.payload.readUInt16BE(optionOffset + 2),
             range: `${optionOffset}:${optionOffset + 4}`
           });
           optionOffset += 4;
@@ -191,7 +191,7 @@ export default class Dissector {
           optionItems.push('Window scale');
           option.items.push({
             name: 'Window scale',
-            value: new Value(parentLayer.payload.readUInt8(optionOffset + 2)),
+            value: parentLayer.payload.readUInt8(optionOffset + 2),
             range: `${optionOffset}:${optionOffset + 3}`
           });
           optionOffset += 3;
@@ -212,7 +212,7 @@ export default class Dissector {
           optionItems.push('Selective ACK');
           option.items.push({
             name: 'Selective ACK',
-            value: new Value(parentLayer.payload.slice(optionOffset + 2, optionOffset + length)),
+            value: parentLayer.payload.slice(optionOffset + 2, optionOffset + length),
             data: `${optionOffset}:${optionOffset + length}`
           });
 
@@ -225,15 +225,15 @@ export default class Dissector {
           optionItems.push('Timestamps');
           option.items.push({
             name: 'Timestamps',
-            value: new Value(`${mt} - ${et}`),
+            value: `${mt} - ${et}`,
             range: `${optionOffset}:${optionOffset + 10}`,
             items: [{
               name: 'My timestamp',
-              value: new Value(mt),
+              value: mt,
               range: `${optionOffset + 2}:${optionOffset + 6}`
             }, {
               name: 'Echo reply timestamp',
-              value: new Value(et),
+              value: et,
               range: `${optionOffset + 6}:${optionOffset + 10}`
             }]
           });
@@ -245,18 +245,18 @@ export default class Dissector {
       }
     }
 
-    option.value = new Value(optionItems.join(','));
+    option.value = optionItems.join(',');
     layer.addItem(option);
 
     layer.range = optionDataOffset + ':';
     layer.payload = parentLayer.payload.slice(optionDataOffset);
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
+      value: layer.payload,
       range: optionDataOffset + ':'
     });
 
-    layer.summary = `${layer.attr('src').data} -> ${layer.attr('dst').data} seq:${seq.data} ack:${ack.data}`;
+    layer.summary = `${layer.attr('src').data} -> ${layer.attr('dst').data} seq:${seq} ack:${ack}`;
 
     let id = layer.attr('src').data + '/' + layer.attr('dst').data;
     let chunk = new StreamChunk(parentLayer.namespace, id, layer);

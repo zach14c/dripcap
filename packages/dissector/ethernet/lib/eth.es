@@ -33,7 +33,7 @@ export default class Dissector {
     if (type <= 1500) {
       layer.addItem({
         name: 'Length',
-        value: new Value(type),
+        value: type,
         range: '12:14'
       });
     } else {
@@ -69,7 +69,7 @@ export default class Dissector {
     layer.payload = parentLayer.payload.slice(14);
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
+      value: layer.payload,
       range: '14:'
     });
 

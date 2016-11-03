@@ -12,7 +12,7 @@ export default class Dissector {
     layer.name = 'IPv4';
     layer.alias = 'ipv4';
 
-    let version = new Value(parentLayer.payload.readUInt8(0) >> 4);
+    let version = parentLayer.payload.readUInt8(0) >> 4;
     layer.addItem({
       name: 'Version',
       value: version,
@@ -20,7 +20,7 @@ export default class Dissector {
     });
     layer.setAttr('version', version);
 
-    let headerLength = new Value(parentLayer.payload.readUInt8(0) & 0b00001111);
+    let headerLength = parentLayer.payload.readUInt8(0) & 0b00001111;
     layer.addItem({
       name: 'Internet Header Length',
       value: headerLength,
@@ -28,7 +28,7 @@ export default class Dissector {
     });
     layer.setAttr('headerLength', headerLength);
 
-    let type = new Value(parentLayer.payload.readUInt8(1));
+    let type = parentLayer.payload.readUInt8(1);
     layer.addItem({
       name: 'Type of service',
       value: type,
@@ -36,7 +36,7 @@ export default class Dissector {
     });
     layer.setAttr('type', type);
 
-    let totalLength = new Value(parentLayer.payload.readUInt16BE(2));
+    let totalLength = parentLayer.payload.readUInt16BE(2);
     layer.addItem({
       name: 'Total Length',
       value: totalLength,
@@ -44,7 +44,7 @@ export default class Dissector {
     });
     layer.setAttr('totalLength', totalLength);
 
-    let id = new Value(parentLayer.payload.readUInt16BE(4));
+    let id = parentLayer.payload.readUInt16BE(4);
     layer.addItem({
       name: 'Identification',
       value: id,
@@ -67,23 +67,29 @@ export default class Dissector {
       items: [
         {
           name: 'Reserved',
-          value: new Value(flags.data['Reserved']),
+          value: flags.data['Reserved'],
           range: '6:7'
         },
         {
           name: 'Don\'t Fragment',
-          value: new Value(flags.data['Don\'t Fragment']),
-          range: '6:7'
+          value: flags.data['Don\'t Fragment'],
+          range: '6:7',
+          attrs: { _filterHint: `${layer.alias}.flags.DoNotFragment` }
         },
         {
           name: 'More Fragments',
-          value: new Value(flags.data['More Fragments']),
-          range: '6:7'
+          value: flags.data['More Fragments'],
+          range: '6:7',
+          attrs: { _filterHint: `${layer.alias}.flags.MoreFragments` }
         }
       ]
     });
+    layer.setAttr('flags', {
+      DoNotFragment: flags.data['Don\'t Fragment'],
+      MoreFragments: flags.data['More Fragments']
+    });
 
-    let fragmentOffset = new Value(parentLayer.payload.readUInt8(6) & 0b0001111111111111);
+    let fragmentOffset = parentLayer.payload.readUInt8(6) & 0b0001111111111111;
     layer.addItem({
       name: 'Fragment Offset',
       value: fragmentOffset,
@@ -91,7 +97,7 @@ export default class Dissector {
     });
     layer.setAttr('fragmentOffset', fragmentOffset);
 
-    let ttl = new Value(parentLayer.payload.readUInt8(8));
+    let ttl = parentLayer.payload.readUInt8(8);
     layer.addItem({
       name: 'TTL',
       value: ttl,
@@ -113,7 +119,7 @@ export default class Dissector {
       layer.namespace = `::Ethernet::IPv4::<${protocolName}>`;
     }
 
-    let checksum = new Value(parentLayer.payload.readUInt16BE(10));
+    let checksum = parentLayer.payload.readUInt16BE(10);
     layer.addItem({
       name: 'Header Checksum',
       value: checksum,
@@ -141,7 +147,7 @@ export default class Dissector {
     layer.payload = parentLayer.payload.slice(20, totalLength.data);
     layer.addItem({
       name: 'Payload',
-      value: new Value(layer.payload),
+      value: layer.payload,
       range: '20:' + totalLength.data
     });
 

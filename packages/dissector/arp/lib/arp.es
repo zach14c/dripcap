@@ -32,7 +32,7 @@ export default class ARPDissector {
     });
     layer.setAttr('ptype', ptype);
 
-    let hlen = new Value(parentLayer.payload.readUInt8(4));
+    let hlen = parentLayer.payload.readUInt8(4);
     layer.addItem({
       name: 'Hardware length',
       value: hlen,
@@ -40,7 +40,7 @@ export default class ARPDissector {
     });
     layer.setAttr('hlen', hlen);
 
-    let plen = new Value(parentLayer.payload.readUInt8(5));
+    let plen = parentLayer.payload.readUInt8(5);
     layer.addItem({
       name: 'Protocol length',
       value: plen,
