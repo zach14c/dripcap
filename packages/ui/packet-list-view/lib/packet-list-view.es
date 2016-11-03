@@ -6,19 +6,16 @@ import Component from 'dripcap/component';
 import {
   remote
 } from 'electron';
-let {
-  Menu
-} = remote;
-let {
-  MenuItem
-} = remote;
-let {
+const {
+  Menu,
+  MenuItem,
   dialog
 } = remote;
 import {
   Session,
   Package,
-  PubSub
+  PubSub,
+  KeyBind
 } from 'dripcap';
 
 export default class PacketListView {
@@ -35,7 +32,101 @@ export default class PacketListView {
     })[0];
 
     this.view = $('[riot-tag=packet-list-view]');
-    this.view.scroll(_.debounce((() => this.update()), 100));
+    this.view.scroll(_.throttle((() => this.update()), 200));
+
+    let refresh = _.debounce(() => {
+      PubSub.pub('core:session-packet', this.session.get(this.selectedId));
+    }, 200);
+
+    let cellHeight = 32;
+
+    KeyBind.bind('up', '[riot-tag=packet-list-view]', () => {
+      let cell = this.main.children(`div.packet[data-packet=${this.selectedId}]:visible`);
+      let nextIndex = 0;
+
+      if (this.filtered < 0) {
+        if (this.packets > 0) {
+          if (this.selectedId > 1) {
+            this.selectedId--;
+          } else {
+            this.selectedId = 1;
+          }
+          nextIndex = this.selectedId;
+        } else {
+          return;
+        }
+      } else {
+        if (this.filtered > 0) {
+          nextIndex = parseInt(cell.css('top')) / cellHeight - 1;
+          let list = this.session.getFiltered('main', nextIndex, nextIndex);
+          if (list[0]) {
+            this.selectedId = list[0];
+          } else {
+            return;
+          }
+        } else {
+          return;
+        }
+      }
+
+      this.cells.removeClass('selected');
+      let pos = nextIndex * cellHeight;
+      let top = this.view.scrollTop();
+      let diff = pos - (cellHeight * 2) - top;
+      if (diff < 0) {
+        this.view.scrollTop(this.view.scrollTop() + diff);
+      } else if (pos > this.view.scrollTop() + this.view.height()) {
+        this.view.scrollTop(pos - this.view.height() + cellHeight * 2);
+      }
+      this.main.children(`div.packet[data-packet=${this.selectedId}]`).addClass('selected');
+      refresh();
+
+      return false;
+    });
+
+    KeyBind.bind('down', '[riot-tag=packet-list-view]', () => {
+      let cell = this.main.children(`div.packet[data-packet=${this.selectedId}]:visible`);
+      let nextIndex = 0;
+
+      if (this.filtered < 0) {
+        if (this.packets > 0) {
+          if (this.selectedId < 1) {
+            this.selectedId = 1;
+          } else if (this.selectedId < this.packets) {
+            this.selectedId++;
+          }
+          nextIndex = this.selectedId;
+        } else {
+          return;
+        }
+      } else {
+        if (this.filtered > 0) {
+          nextIndex = parseInt(cell.css('top')) / cellHeight + 1;
+          let list = this.session.getFiltered('main', nextIndex, nextIndex);
+          if (list[0]) {
+            this.selectedId = list[0];
+          } else {
+            return;
+          }
+        } else {
+          return;
+        }
+      }
+
+      this.cells.removeClass('selected');
+      let pos = nextIndex * cellHeight;
+      let bottom = this.view.scrollTop() + this.view.height();
+      let diff = pos + (cellHeight * 2) - bottom;
+      if (diff > 0) {
+        this.view.scrollTop(this.view.scrollTop() + diff);
+      } else if (pos < this.view.scrollTop()) {
+        this.view.scrollTop(pos - cellHeight * 2);
+      }
+      this.main.children(`div.packet[data-packet=${this.selectedId}]`).addClass('selected');
+      refresh();
+
+      return false;
+    });
 
     PubSub.sub('core:session-packet', pkt => {
       if (pkt.seq === this.selectedId) {
@@ -73,6 +164,7 @@ export default class PacketListView {
       this.selectedId = -1;
       this.reset();
       this.update();
+      process.nextTick(() => { $('[riot-tag=packet-list-view]').focus() });
     });
 
     PubSub.sub('core:capturing-status', n => {
