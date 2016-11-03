@@ -22,17 +22,6 @@ function globalPaths() {
   };
 }
 
-require("babel-register")({
-  extensions: [".es"],
-  plugins: ["add-module-exports", [
-      "transform-es2015-modules-commonjs", {
-        "allowTopLevelThis": true
-      }
-    ],
-    "transform-async-to-generator", globalPaths
-  ]
-});
-
 export default class Package extends EventEmitter {
   constructor(jsonPath, profile) {
     super();
