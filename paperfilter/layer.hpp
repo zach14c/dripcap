@@ -16,6 +16,7 @@ class LargeBuffer;
 class Layer {
 public:
   Layer(const std::string &ns);
+  Layer(const std::string &ns, const v8::Local<v8::Object> &options);
   ~Layer();
   Layer &operator=(const Layer &) = delete;
 

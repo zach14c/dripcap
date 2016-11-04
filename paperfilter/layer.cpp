@@ -3,6 +3,7 @@
 #include "large_buffer.hpp"
 #include "item.hpp"
 #include <v8pp/class.hpp>
+#include <v8pp/object.hpp>
 
 using namespace v8;
 
@@ -23,6 +24,36 @@ public:
 
 Layer::Layer(const std::string &ns) : d(std::make_shared<Private>()) {
   d->ns = ns;
+}
+
+Layer::Layer(const std::string &ns, const v8::Local<v8::Object> &options)
+    : d(std::make_shared<Private>()) {
+  d->ns = ns;
+  v8::Isolate *isolate = v8::Isolate::GetCurrent();
+  v8pp::get_option(isolate, options, "name", d->name);
+  v8pp::get_option(isolate, options, "id", d->id);
+  v8pp::get_option(isolate, options, "summary", d->summary);
+  v8pp::get_option(isolate, options, "range", d->range);
+
+  v8::Local<v8::Object> attrs;
+  if (v8pp::get_option(isolate, options, "attrs", attrs)) {
+  }
+
+  v8::Local<v8::Array> items;
+  if (v8pp::get_option(isolate, options, "items", items)) {
+  }
+
+  v8::Local<v8::Object> payload;
+  if (v8pp::get_option(isolate, options, "payload", payload)) {
+    if (Buffer *buffer = v8pp::class_<Buffer>::unwrap_object(isolate, payload)) {
+      d->payload = buffer->slice();
+      d->largePayload.reset();
+    } else if (LargeBuffer *buffer =
+                   v8pp::class_<LargeBuffer>::unwrap_object(isolate, payload)) {
+      d->largePayload.reset(new LargeBuffer(*buffer));
+      d->payload.reset();
+    }
+  }
 }
 
 Layer::~Layer() {}
