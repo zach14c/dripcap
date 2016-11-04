@@ -49,6 +49,10 @@ FilterFunc makeFilter(const json11::Json &json) {
         }
       }
 
+      if (object->IsString()) {
+        object = v8::StringObject::New(object.As<v8::String>());
+      }
+
       if (object->IsObject()) {
         v8::Local<v8::Value> key = v8pp::to_v8(isolate, name);
         if (object.As<v8::Object>()->Has(key)) {
