@@ -196,7 +196,7 @@
 
   this.layerContext = e => {
     this.clickedLayerNamespace = e.item.ns;
-    e.filterText = this.layer.alias;
+    e.filterText = this.layer.id;
     Menu.popup('packet-view:layer-menu', this, remote.getCurrentWindow(), {event: e});
     e.stopPropagation();
   };

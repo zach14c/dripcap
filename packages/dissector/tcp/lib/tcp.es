@@ -11,7 +11,7 @@ export default class Dissector {
   analyze(packet, parentLayer) {
     let layer = new Layer(parentLayer.namespace.replace('<TCP>', 'TCP'));
     layer.name = 'TCP';
-    layer.alias = 'tcp';
+    layer.id = 'tcp';
 
     let source = parentLayer.payload.readUInt16BE(0);
     layer.addItem({

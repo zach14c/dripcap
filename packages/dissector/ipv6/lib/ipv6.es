@@ -10,7 +10,7 @@ export default class IPv6Dissector {
   analyze(packet, parentLayer) {
     let layer = new Layer('::Ethernet::IPv6');
     layer.name = 'IPv6';
-    layer.alias = 'ipv6';
+    layer.id = 'ipv6';
 
     let version = parentLayer.payload.readUInt8(0) >> 4;
     layer.addItem({

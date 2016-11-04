@@ -13,7 +13,7 @@ export default class Dissector {
     if (m != null) {
       let layer = new Layer(chunk.namespace + '::HTTP');
       layer.name = 'HTTP';
-      layer.alias = 'http';
+      layer.id = 'http';
 
       let large = new LargeBuffer();
       large.write(payload);

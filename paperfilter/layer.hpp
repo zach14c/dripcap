@@ -23,8 +23,8 @@ public:
   void setNs(const std::string &ns);
   std::string name() const;
   void setName(const std::string &name);
-  std::string alias() const;
-  void setAlias(const std::string &name);
+  std::string id() const;
+  void setId(const std::string &name);
   std::string summary() const;
   void setSummary(const std::string &summary);
   std::string extension() const;

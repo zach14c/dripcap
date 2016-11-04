@@ -12,7 +12,7 @@ export default class ARPDissector {
 
     let layer = new Layer('::Ethernet::ARP');
     layer.name = 'ARP';
-    layer.alias = 'arp';
+    layer.id = 'arp';
 
     let htypeNumber = parentLayer.payload.readUInt16BE(0);
     let htype = Enum(hardwareTable, htypeNumber);

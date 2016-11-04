@@ -58,7 +58,7 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
   Layer_class.ctor<const std::string &>();
   Layer_class.set("namespace", v8pp::property(&Layer::ns, &Layer::setNs));
   Layer_class.set("name", v8pp::property(&Layer::name, &Layer::setName));
-  Layer_class.set("alias", v8pp::property(&Layer::alias, &Layer::setAlias));
+  Layer_class.set("id", v8pp::property(&Layer::id, &Layer::setId));
   Layer_class.set("summary",
                   v8pp::property(&Layer::summary, &Layer::setSummary));
   Layer_class.set("extension",

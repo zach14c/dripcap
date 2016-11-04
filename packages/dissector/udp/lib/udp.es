@@ -10,7 +10,7 @@ export default class UDPDissector {
   analyze(packet, parentLayer) {
     let layer = new Layer(parentLayer.namespace.replace('<UDP>', 'UDP'));
     layer.name = 'UDP';
-    layer.alias = 'udp';
+    layer.id = 'udp';
 
     let source = parentLayer.payload.readUInt16BE(0);
     layer.addItem({

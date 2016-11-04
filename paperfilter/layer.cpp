@@ -10,7 +10,7 @@ class Layer::Private {
 public:
   std::string ns;
   std::string name;
-  std::string alias;
+  std::string id;
   std::string summary;
   std::string extension;
   std::string range;
@@ -36,9 +36,9 @@ std::string Layer::name() const { return d->name; }
 
 void Layer::setName(const std::string &name) { d->name = name; }
 
-std::string Layer::alias() const { return d->alias; }
+std::string Layer::id() const { return d->id; }
 
-void Layer::setAlias(const std::string &alias) { d->alias = alias; }
+void Layer::setId(const std::string &id) { d->id = id; }
 
 std::string Layer::summary() const { return d->summary; };
 

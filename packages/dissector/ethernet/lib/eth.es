@@ -10,7 +10,7 @@ export default class Dissector {
   analyze(packet, parentLayer) {
     let layer = new Layer('::Ethernet');
     layer.name = 'Ethernet';
-    layer.alias = 'eth';
+    layer.id = 'eth';
 
     let destination = MACAddress(parentLayer.payload.slice(0, 6));
     layer.addItem({

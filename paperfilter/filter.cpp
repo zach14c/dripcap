@@ -254,7 +254,7 @@ FilterFunc makeFilter(const json11::Json &json) {
           const std::unordered_map<std::string, std::shared_ptr<Layer>>
               &layers) {
         for (const auto &pair : layers) {
-          if (pair.second->alias() == name) {
+          if (pair.second->id() == name) {
             return pair.second;
           }
         }

@@ -28,7 +28,7 @@ public:
     v8::Local<v8::ObjectTemplate> otl = tpl->InstanceTemplate();
     Nan::SetAccessor(otl, Nan::New("namespace").ToLocalChecked(), ns);
     Nan::SetAccessor(otl, Nan::New("name").ToLocalChecked(), name);
-    Nan::SetAccessor(otl, Nan::New("alias").ToLocalChecked(), alias);
+    Nan::SetAccessor(otl, Nan::New("id").ToLocalChecked(), id);
     Nan::SetAccessor(otl, Nan::New("summary").ToLocalChecked(), summary);
     Nan::SetAccessor(otl, Nan::New("layers").ToLocalChecked(), layers);
     Nan::SetAccessor(otl, Nan::New("payload").ToLocalChecked(), payload);
@@ -62,12 +62,12 @@ public:
           v8pp::to_v8(v8::Isolate::GetCurrent(), layer->name()));
   }
 
-  static NAN_GETTER(alias) {
+  static NAN_GETTER(id) {
     SessionLayerWrapper *wrapper =
         ObjectWrap::Unwrap<SessionLayerWrapper>(info.Holder());
     if (const std::shared_ptr<const Layer> &layer = wrapper->layer.lock())
       info.GetReturnValue().Set(
-          v8pp::to_v8(v8::Isolate::GetCurrent(), layer->alias()));
+          v8pp::to_v8(v8::Isolate::GetCurrent(), layer->id()));
   }
 
   static NAN_GETTER(summary) {

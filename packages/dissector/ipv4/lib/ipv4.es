@@ -10,7 +10,7 @@ export default class Dissector {
   analyze(packet, parentLayer) {
     let layer = new Layer('::Ethernet::IPv4');
     layer.name = 'IPv4';
-    layer.alias = 'ipv4';
+    layer.id = 'ipv4';
 
     let version = parentLayer.payload.readUInt8(0) >> 4;
     layer.addItem({
@@ -74,13 +74,13 @@ export default class Dissector {
           name: 'Don\'t Fragment',
           value: flags.data['Don\'t Fragment'],
           range: '6:7',
-          attrs: { _filterHint: `${layer.alias}.flags.DoNotFragment` }
+          attrs: { _filterHint: `${layer.id}.flags.DoNotFragment` }
         },
         {
           name: 'More Fragments',
           value: flags.data['More Fragments'],
           range: '6:7',
-          attrs: { _filterHint: `${layer.alias}.flags.MoreFragments` }
+          attrs: { _filterHint: `${layer.id}.flags.MoreFragments` }
         }
       ]
     });

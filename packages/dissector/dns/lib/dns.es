@@ -9,7 +9,7 @@ export default class DNSDissector {
   analyze(packet, parentLayer) {
     let layer = new Layer(parentLayer.namespace + '::DNS');
     layer.name = 'DNS';
-    layer.alias = 'dns';
+    layer.id = 'dns';
 
     let id = parentLayer.payload.readUInt16BE(0);
     let flags0 = parentLayer.payload.readUInt8(2);
