@@ -28,7 +28,6 @@ public:
     Nan::SetAccessor(otl, Nan::New("ts_nsec").ToLocalChecked(), ts_nsec);
     Nan::SetAccessor(otl, Nan::New("length").ToLocalChecked(), length);
     Nan::SetAccessor(otl, Nan::New("summary").ToLocalChecked(), summary);
-    Nan::SetAccessor(otl, Nan::New("extension").ToLocalChecked(), extension);
     Nan::SetAccessor(otl, Nan::New("payload").ToLocalChecked(), payload);
     Nan::SetAccessor(otl, Nan::New("layers").ToLocalChecked(), layers);
     Nan::SetAccessor(otl, Nan::New("name").ToLocalChecked(), name);
@@ -97,18 +96,6 @@ public:
     if (const std::shared_ptr<const Packet> &pkt = wrapper->pkt.lock())
       info.GetReturnValue().Set(
           v8pp::to_v8(v8::Isolate::GetCurrent(), pkt->summary()));
-  }
-
-  static NAN_GETTER(extension) {
-    v8::Isolate *isolate = v8::Isolate::GetCurrent();
-    SessionPacketWrapper *wrapper =
-        ObjectWrap::Unwrap<SessionPacketWrapper>(info.Holder());
-    if (const std::shared_ptr<const Packet> &pkt = wrapper->pkt.lock()) {
-      v8::Local<v8::Value> ext = v8pp::json_parse(isolate, pkt->extension());
-      if (ext.IsEmpty())
-        ext = v8::Object::New(isolate);
-      info.GetReturnValue().Set(ext);
-    }
   }
 
   static NAN_GETTER(layers) {

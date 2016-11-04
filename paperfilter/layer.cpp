@@ -12,7 +12,6 @@ public:
   std::string name;
   std::string id;
   std::string summary;
-  std::string extension;
   std::string range;
   std::unordered_map<std::string, std::shared_ptr<Layer>> layers;
   std::weak_ptr<Packet> pkt;
@@ -43,12 +42,6 @@ void Layer::setId(const std::string &id) { d->id = id; }
 std::string Layer::summary() const { return d->summary; };
 
 void Layer::setSummary(const std::string &summary) { d->summary = summary; }
-
-std::string Layer::extension() const { return d->extension; };
-
-void Layer::setExtension(const std::string &extension) {
-  d->extension = extension;
-}
 
 std::string Layer::range() const { return d->range; };
 

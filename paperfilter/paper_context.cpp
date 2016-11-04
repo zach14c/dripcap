@@ -61,8 +61,6 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
   Layer_class.set("id", v8pp::property(&Layer::id, &Layer::setId));
   Layer_class.set("summary",
                   v8pp::property(&Layer::summary, &Layer::setSummary));
-  Layer_class.set("extension",
-                  v8pp::property(&Layer::extension, &Layer::setExtension));
   Layer_class.set("range", v8pp::property(&Layer::range, &Layer::setRange));
   Layer_class.set("payload", v8pp::property(&Layer::payloadBuffer,
                                             &Layer::setPayloadBuffer));

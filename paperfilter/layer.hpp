@@ -27,8 +27,6 @@ public:
   void setId(const std::string &name);
   std::string summary() const;
   void setSummary(const std::string &summary);
-  std::string extension() const;
-  void setExtension(const std::string &extension);
   std::string range() const;
   void setRange(const std::string &ns);
 

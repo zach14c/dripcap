@@ -34,7 +34,6 @@ public:
     Nan::SetAccessor(otl, Nan::New("payload").ToLocalChecked(), payload);
     Nan::SetAccessor(otl, Nan::New("items").ToLocalChecked(), items);
     Nan::SetAccessor(otl, Nan::New("attrs").ToLocalChecked(), attrs);
-    Nan::SetAccessor(otl, Nan::New("extension").ToLocalChecked(), extension);
     Nan::SetAccessor(otl, Nan::New("range").ToLocalChecked(), range);
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
   }
@@ -76,18 +75,6 @@ public:
     if (const std::shared_ptr<const Layer> &layer = wrapper->layer.lock())
       info.GetReturnValue().Set(
           v8pp::to_v8(v8::Isolate::GetCurrent(), layer->summary()));
-  }
-
-  static NAN_GETTER(extension) {
-    v8::Isolate *isolate = v8::Isolate::GetCurrent();
-    SessionLayerWrapper *wrapper =
-        ObjectWrap::Unwrap<SessionLayerWrapper>(info.Holder());
-    if (const std::shared_ptr<const Layer> &layer = wrapper->layer.lock()) {
-      v8::Local<v8::Value> ext = v8pp::json_parse(isolate, layer->extension());
-      if (ext.IsEmpty())
-        ext = v8::Object::New(isolate);
-      info.GetReturnValue().Set(ext);
-    }
   }
 
   static NAN_GETTER(range) {

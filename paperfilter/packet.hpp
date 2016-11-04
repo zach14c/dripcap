@@ -29,7 +29,6 @@ public:
   uint32_t length() const;
   bool vpacket() const;
   std::string summary() const;
-  std::string extension() const;
 
   std::string name() const;
   std::string ns() const;
