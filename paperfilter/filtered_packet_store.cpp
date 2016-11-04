@@ -49,15 +49,16 @@ void FilteredPacketStore::insert(uint32_t seq, bool match) {
   uv_rwlock_wrlock(&d->rwlock);
   d->queue[seq] = match;
   uint32_t maxSeq = d->maxSeq;
-  auto it = d->queue.find(maxSeq + 1);
-  for (; it != d->queue.end(); maxSeq++, it = d->queue.find(maxSeq + 1)) {
+  auto end = d->queue.begin();
+  for (auto it = d->queue.find(maxSeq + 1); it != d->queue.end();
+       end = it, it = d->queue.find(++maxSeq + 1)) {
     if (it->second) {
       d->packets.push_back(it->first);
     }
   }
   if (d->maxSeq < maxSeq) {
     d->maxSeq = maxSeq;
-    d->queue.erase(d->queue.begin(), it);
+    d->queue.erase(d->queue.begin(), end);
     for (const auto &pair : d->handlers) {
       if (pair.second)
         pair.second(size());
