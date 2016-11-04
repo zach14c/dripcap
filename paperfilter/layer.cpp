@@ -26,26 +26,40 @@ Layer::Layer(const std::string &ns) : d(std::make_shared<Private>()) {
   d->ns = ns;
 }
 
-Layer::Layer(const std::string &ns, const v8::Local<v8::Object> &options)
+Layer::Layer(v8::Local<v8::Object> options)
     : d(std::make_shared<Private>()) {
-  d->ns = ns;
   v8::Isolate *isolate = v8::Isolate::GetCurrent();
+  v8pp::get_option(isolate, options, "namespace", d->ns);
   v8pp::get_option(isolate, options, "name", d->name);
   v8pp::get_option(isolate, options, "id", d->id);
   v8pp::get_option(isolate, options, "summary", d->summary);
   v8pp::get_option(isolate, options, "range", d->range);
 
-  v8::Local<v8::Object> attrs;
-  if (v8pp::get_option(isolate, options, "attrs", attrs)) {
-  }
-
   v8::Local<v8::Array> items;
   if (v8pp::get_option(isolate, options, "items", items)) {
+    for (uint32_t i = 0; i < items->Length(); ++i) {
+      v8::Local<v8::Value> item = items->Get(i);
+      if (item->IsObject())
+        addItem(item.As<v8::Object>());
+    }
+  }
+
+  v8::Local<v8::Object> attrs;
+  if (v8pp::get_option(isolate, options, "attrs", attrs)) {
+    v8::Local<v8::Array> keys = attrs->GetPropertyNames();
+    for (uint32_t i = 0; i < keys->Length(); ++i) {
+      v8::Local<v8::Value> key = keys->Get(i);
+      const std::string &keyStr = v8pp::from_v8<std::string>(isolate, key, "");
+      if (!keyStr.empty()) {
+        setAttr(keyStr, attrs->Get(key));
+      }
+    }
   }
 
   v8::Local<v8::Object> payload;
   if (v8pp::get_option(isolate, options, "payload", payload)) {
-    if (Buffer *buffer = v8pp::class_<Buffer>::unwrap_object(isolate, payload)) {
+    if (Buffer *buffer =
+            v8pp::class_<Buffer>::unwrap_object(isolate, payload)) {
       d->payload = buffer->slice();
       d->largePayload.reset();
     } else if (LargeBuffer *buffer =

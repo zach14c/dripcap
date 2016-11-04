@@ -9,90 +9,93 @@ export default class ARPDissector {
   }
 
   analyze(packet, parentLayer) {
-
-    let layer = new Layer('::Ethernet::ARP');
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = '::Ethernet::ARP';
     layer.name = 'ARP';
     layer.id = 'arp';
 
     let htypeNumber = parentLayer.payload.readUInt16BE(0);
     let htype = Enum(hardwareTable, htypeNumber);
-    layer.addItem({
+    layer.items.push({
       name: 'Hardware type',
       value: htype,
       range: '0:2'
     });
-    layer.setAttr('htype', htype);
+    layer.attrs.htype = htype;
 
     let ptypeNumber = parentLayer.payload.readUInt16BE(2);
     let ptype = Enum(protocolTable, ptypeNumber);
-    layer.addItem({
+    layer.items.push({
       name: 'Protocol type',
       value: ptype,
       range: '2:4'
     });
-    layer.setAttr('ptype', ptype);
+    layer.attrs.ptype = ptype;
 
     let hlen = parentLayer.payload.readUInt8(4);
-    layer.addItem({
+    layer.items.push({
       name: 'Hardware length',
       value: hlen,
       range: '4:5'
     });
-    layer.setAttr('hlen', hlen);
+    layer.attrs.hlen = hlen;
 
     let plen = parentLayer.payload.readUInt8(5);
-    layer.addItem({
+    layer.items.push({
       name: 'Protocol length',
       value: plen,
       range: '5:6'
     });
-    layer.setAttr('plen', plen);
+    layer.attrs.plen = plen;
 
     let operationNumber = parentLayer.payload.readUInt16BE(6);
     let operation = Enum(operationTable, operationNumber);
     let operationName = operationTable[operationNumber];
-    layer.addItem({
+    layer.items.push({
       name: 'Operation',
       value: operation,
       range: '6:8'
     });
-    layer.setAttr('operation', operation);
+    layer.attrs.operation = operation;
 
     let sha = MACAddress(parentLayer.payload.slice(8, 14));
-    layer.addItem({
+    layer.items.push({
       name: 'Sender hardware address',
       value: sha,
       range: '8:14'
     });
-    layer.setAttr('sha', sha);
+    layer.attrs.sha = sha;
 
     let spa = IPv4Address(parentLayer.payload.slice(14, 18));
-    layer.addItem({
+    layer.items.push({
       name: 'Sender protocol address',
       value: spa,
       range: '14:18'
     });
-    layer.setAttr('spa', spa);
+    layer.attrs.spa = spa;
 
     let tha = MACAddress(parentLayer.payload.slice(18, 24));
-    layer.addItem({
+    layer.items.push({
       name: 'Target hardware address',
       value: tha,
       range: '18:24'
     });
-    layer.setAttr('tha', tha);
+    layer.attrs.tha = tha;
 
     let tpa = IPv4Address(parentLayer.payload.slice(24, 28));
-    layer.addItem({
+    layer.items.push({
       name: 'Target protocol address',
       value: tpa,
       range: '24:28'
     });
-    layer.setAttr('tpa', tpa);
+    layer.attrs.tpa = tpa;
 
     layer.summary = `[${operationName.toUpperCase()}] ${sha.data}-${spa.data} -> ${tha.data}-${tpa.data}`;
 
-    return [layer];
+    return new Layer(layer);
   }
 }
 

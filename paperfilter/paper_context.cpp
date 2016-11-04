@@ -55,19 +55,15 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
           });
 
   v8pp::class_<Layer> Layer_class(isolate);
-  Layer_class.ctor<const std::string &>();
-  Layer_class.set("namespace", v8pp::property(&Layer::ns, &Layer::setNs));
-  Layer_class.set("name", v8pp::property(&Layer::name, &Layer::setName));
-  Layer_class.set("id", v8pp::property(&Layer::id, &Layer::setId));
-  Layer_class.set("summary",
-                  v8pp::property(&Layer::summary, &Layer::setSummary));
-  Layer_class.set("range", v8pp::property(&Layer::range, &Layer::setRange));
-  Layer_class.set("payload", v8pp::property(&Layer::payloadBuffer,
-                                            &Layer::setPayloadBuffer));
+  Layer_class.ctor<v8::Local<v8::Object>>();
+  Layer_class.set("namespace", v8pp::property(&Layer::ns));
+  Layer_class.set("name", v8pp::property(&Layer::name));
+  Layer_class.set("id", v8pp::property(&Layer::id));
+  Layer_class.set("summary", v8pp::property(&Layer::summary));
+  Layer_class.set("range", v8pp::property(&Layer::range));
+  Layer_class.set("payload", v8pp::property(&Layer::payloadBuffer));
   Layer_class.set("layers", v8pp::property(&Layer::layersObject));
-  Layer_class.set("addItem", &Layer::addItem);
   Layer_class.set("attr", &Layer::attr);
-  Layer_class.set("setAttr", &Layer::setAttr);
 
   v8pp::class_<Item> Item_class(isolate);
   Item_class.ctor<const v8::FunctionCallbackInfo<v8::Value> &>();
