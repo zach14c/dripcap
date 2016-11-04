@@ -74,6 +74,7 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
   v8pp::class_<Item> Item_class(isolate);
   Item_class.ctor<const v8::FunctionCallbackInfo<v8::Value> &>();
   Item_class.set("name", v8pp::property(&Item::name, &Item::setName));
+  Item_class.set("id", v8pp::property(&Item::id, &Item::setId));
   Item_class.set("range", v8pp::property(&Item::range, &Item::setRange));
   Item_class.set("value", v8pp::property(&Item::valueObject, &Item::setValue));
   Item_class.set("addItem", &Item::addItem);

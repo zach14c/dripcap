@@ -18,6 +18,8 @@ public:
 
   std::string name() const;
   void setName(const std::string &name);
+  std::string id() const;
+  void setId(const std::string &id);
   std::string range() const;
   void setRange(const std::string &range);
   v8::Local<v8::Object> valueObject() const;

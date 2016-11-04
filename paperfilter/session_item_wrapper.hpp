@@ -22,6 +22,7 @@ public:
     tpl->SetClassName(Nan::New("Item").ToLocalChecked());
     v8::Local<v8::ObjectTemplate> otl = tpl->InstanceTemplate();
     Nan::SetAccessor(otl, Nan::New("name").ToLocalChecked(), name);
+    Nan::SetAccessor(otl, Nan::New("id").ToLocalChecked(), id);
     Nan::SetAccessor(otl, Nan::New("range").ToLocalChecked(), range);
     Nan::SetAccessor(otl, Nan::New("value").ToLocalChecked(), value);
     Nan::SetAccessor(otl, Nan::New("items").ToLocalChecked(), items);
@@ -41,6 +42,13 @@ public:
         ObjectWrap::Unwrap<SessionItemWrapper>(info.Holder());
     info.GetReturnValue().Set(
         v8pp::to_v8(v8::Isolate::GetCurrent(), wrapper->item.name()));
+  }
+
+  static NAN_GETTER(id) {
+    SessionItemWrapper *wrapper =
+        ObjectWrap::Unwrap<SessionItemWrapper>(info.Holder());
+    info.GetReturnValue().Set(
+        v8pp::to_v8(v8::Isolate::GetCurrent(), wrapper->item.id()));
   }
 
   static NAN_GETTER(range) {

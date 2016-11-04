@@ -9,6 +9,7 @@ using namespace v8;
 class Item::Private {
 public:
   std::string name;
+  std::string id;
   std::string range;
   ItemValue value;
   std::vector<Item> items;
@@ -24,6 +25,7 @@ Item::Item(v8::Local<v8::Value> value) : d(new Private()) {
   if (!value.IsEmpty() && value->IsObject()) {
     v8::Local<v8::Object> obj = value.As<v8::Object>();
     v8pp::get_option(isolate, obj, "name", d->name);
+    v8pp::get_option(isolate, obj, "id", d->id);
     v8pp::get_option(isolate, obj, "range", d->range);
 
     v8::Local<v8::Value> value;
@@ -67,6 +69,10 @@ Item::~Item() {}
 std::string Item::name() const { return d->name; }
 
 void Item::setName(const std::string &name) { d->name = name; }
+
+std::string Item::id() const { return d->id; }
+
+void Item::setId(const std::string &id) { d->id = id; }
 
 std::string Item::range() const { return d->range; }
 
