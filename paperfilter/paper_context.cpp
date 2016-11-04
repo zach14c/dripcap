@@ -55,29 +55,63 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
           });
 
   v8pp::class_<Layer> Layer_class(isolate);
-  Layer_class.ctor<const std::string &>();
-  Layer_class.set("namespace", v8pp::property(&Layer::ns, &Layer::setNs));
-  Layer_class.set("name", v8pp::property(&Layer::name, &Layer::setName));
-  Layer_class.set("id", v8pp::property(&Layer::id, &Layer::setId));
-  Layer_class.set("summary",
-                  v8pp::property(&Layer::summary, &Layer::setSummary));
-  Layer_class.set("range", v8pp::property(&Layer::range, &Layer::setRange));
-  Layer_class.set("payload", v8pp::property(&Layer::payloadBuffer,
-                                            &Layer::setPayloadBuffer));
+  Layer_class.ctor<v8::Local<v8::Object>>();
+  Layer_class.set("namespace", v8pp::property(&Layer::ns));
+  Layer_class.set("name", v8pp::property(&Layer::name));
+  Layer_class.set("id", v8pp::property(&Layer::id));
+  Layer_class.set("summary", v8pp::property(&Layer::summary));
+  Layer_class.set("range", v8pp::property(&Layer::range));
+  Layer_class.set("payload", v8pp::property(&Layer::payloadBuffer));
   Layer_class.set("layers", v8pp::property(&Layer::layersObject));
-  Layer_class.set("addItem", &Layer::addItem);
-  Layer_class.set("attr", &Layer::attr);
-  Layer_class.set("setAttr", &Layer::setAttr);
+  Layer_class.class_function_template()->PrototypeTemplate()->SetAccessor(
+      v8pp::to_v8(isolate, "attrs"),
+      [](Local<String>, const PropertyCallbackInfo<Value> &info) {
+        Isolate *isolate = Isolate::GetCurrent();
+        Local<String> key = v8pp::to_v8(isolate, "__attrs");
+        if (info.This()->Has(key)) {
+          info.GetReturnValue().Set(info.This()->Get(key));
+        }
+        Layer *layer = v8pp::class_<Layer>::unwrap_object(isolate, info.This());
+        if (layer) {
+          const auto &attrs = layer->attrs();
+          Local<Object> obj = v8::Object::New(isolate);
+          for (const auto &pair : attrs) {
+            obj->Set(
+                v8pp::to_v8(isolate, pair.first),
+                v8pp::class_<ItemValue>::create_object(isolate, pair.second));
+          }
+          info.This()->Set(key, obj);
+          info.GetReturnValue().Set(obj);
+        }
+      });
 
   v8pp::class_<Item> Item_class(isolate);
   Item_class.ctor<const v8::FunctionCallbackInfo<v8::Value> &>();
-  Item_class.set("name", v8pp::property(&Item::name, &Item::setName));
-  Item_class.set("id", v8pp::property(&Item::id, &Item::setId));
-  Item_class.set("range", v8pp::property(&Item::range, &Item::setRange));
-  Item_class.set("value", v8pp::property(&Item::valueObject, &Item::setValue));
-  Item_class.set("addItem", &Item::addItem);
-  Item_class.set("attr", &Item::attr);
-  Item_class.set("setAttr", &Item::setAttr);
+  Item_class.set("name", v8pp::property(&Item::name));
+  Item_class.set("id", v8pp::property(&Item::id));
+  Item_class.set("range", v8pp::property(&Item::range));
+  Item_class.set("value", v8pp::property(&Item::valueObject));
+  Item_class.class_function_template()->PrototypeTemplate()->SetAccessor(
+      v8pp::to_v8(isolate, "attrs"),
+      [](Local<String>, const PropertyCallbackInfo<Value> &info) {
+        Isolate *isolate = Isolate::GetCurrent();
+        Local<String> key = v8pp::to_v8(isolate, "__attrs");
+        if (info.This()->Has(key)) {
+          info.GetReturnValue().Set(info.This()->Get(key));
+        }
+        Item *item = v8pp::class_<Item>::unwrap_object(isolate, info.This());
+        if (item) {
+          const auto &attrs = item->attrs();
+          Local<Object> obj = v8::Object::New(isolate);
+          for (const auto &pair : attrs) {
+            obj->Set(
+                v8pp::to_v8(isolate, pair.first),
+                v8pp::class_<ItemValue>::create_object(isolate, pair.second));
+          }
+          info.This()->Set(key, obj);
+          info.GetReturnValue().Set(obj);
+        }
+      });
 
   v8pp::class_<ItemValue> ItemValue_class(isolate);
   ItemValue_class.ctor<const v8::FunctionCallbackInfo<v8::Value> &>();
@@ -85,14 +119,32 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
   ItemValue_class.set("type", v8pp::property(&ItemValue::type));
 
   v8pp::class_<StreamChunk> StreamChunk_class(isolate);
-  StreamChunk_class
-      .ctor<const std::string &, const std::string &, v8::Local<v8::Object>>();
+  StreamChunk_class.ctor<v8::Local<v8::Object>>();
   StreamChunk_class.set("namespace", v8pp::property(&StreamChunk::ns));
   StreamChunk_class.set("id", v8pp::property(&StreamChunk::id));
-  StreamChunk_class.set("attr", &StreamChunk::attr);
-  StreamChunk_class.set("setAttr", &StreamChunk::setAttr);
-  StreamChunk_class.set(
-      "end", v8pp::property(&StreamChunk::end, &StreamChunk::setEnd));
+  StreamChunk_class.set("end", v8pp::property(&StreamChunk::end));
+  StreamChunk_class.class_function_template()->PrototypeTemplate()->SetAccessor(
+      v8pp::to_v8(isolate, "attrs"),
+      [](Local<String>, const PropertyCallbackInfo<Value> &info) {
+        Isolate *isolate = Isolate::GetCurrent();
+        Local<String> key = v8pp::to_v8(isolate, "__attrs");
+        if (info.This()->Has(key)) {
+          info.GetReturnValue().Set(info.This()->Get(key));
+        }
+        StreamChunk *chunk =
+            v8pp::class_<StreamChunk>::unwrap_object(isolate, info.This());
+        if (chunk) {
+          const auto &attrs = chunk->attrs();
+          Local<Object> obj = v8::Object::New(isolate);
+          for (const auto &pair : attrs) {
+            obj->Set(
+                v8pp::to_v8(isolate, pair.first),
+                v8pp::class_<ItemValue>::create_object(isolate, pair.second));
+          }
+          info.This()->Set(key, obj);
+          info.GetReturnValue().Set(obj);
+        }
+      });
 
   v8pp::class_<LargeBuffer> LargeBuffer_class(isolate);
   LargeBuffer_class.ctor<>();

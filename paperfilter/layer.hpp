@@ -16,6 +16,7 @@ class LargeBuffer;
 class Layer {
 public:
   Layer(const std::string &ns);
+  Layer(v8::Local<v8::Object> options);
   ~Layer();
   Layer &operator=(const Layer &) = delete;
 
@@ -48,7 +49,6 @@ public:
 
   void setAttr(const std::string &name, v8::Local<v8::Value> obj);
   std::unordered_map<std::string, ItemValue> attrs() const;
-  v8::Local<v8::Value> attr(const std::string &name) const;
 
 private:
   class Private;

@@ -9,57 +9,61 @@ export default class Dissector {
   }
 
   analyze(packet, parentLayer) {
-    let layer = new Layer(parentLayer.namespace.replace('<TCP>', 'TCP'));
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = parentLayer.namespace.replace('<TCP>', 'TCP');
     layer.name = 'TCP';
     layer.id = 'tcp';
 
     let source = parentLayer.payload.readUInt16BE(0);
-    layer.addItem({
+    layer.items.push({
       name: 'Source port',
       value: source,
       range: '0:2'
     });
 
     let destination = parentLayer.payload.readUInt16BE(2);
-    layer.addItem({
+    layer.items.push({
       name: 'Destination port',
       value: destination,
       range: '2:4'
     });
 
-    let srcAddr = parentLayer.attr('src');
-    let dstAddr = parentLayer.attr('dst');
+    let srcAddr = parentLayer.attrs.src;
+    let dstAddr = parentLayer.attrs.dst;
     if (srcAddr.type === 'dripcap/ipv4/addr') {
-      layer.setAttr('src', IPv4Host(srcAddr.data, source));
-      layer.setAttr('dst', IPv4Host(dstAddr.data, destination));
+      layer.attrs.src = IPv4Host(srcAddr.data, source);
+      layer.attrs.dst = IPv4Host(dstAddr.data, destination);
     } else if (srcAddr.type === 'dripcap/ipv6/addr') {
-      layer.setAttr('src', IPv6Host(srcAddr.data, source));
-      layer.setAttr('dst', IPv6Host(dstAddr.data, destination));
+      layer.attrs.src = IPv6Host(srcAddr.data, source);
+      layer.attrs.dst = IPv6Host(dstAddr.data, destination);
     }
 
     let seq = parentLayer.payload.readUInt32BE(4);
-    layer.addItem({
+    layer.items.push({
       name: 'Sequence number',
       value: seq,
       range: '4:8'
     });
-    layer.setAttr('seq', seq);
+    layer.attrs.seq = seq;
 
     let ack = parentLayer.payload.readUInt32BE(8);
-    layer.addItem({
+    layer.items.push({
       name: 'Acknowledgment number',
       value: ack,
       range: '8:12'
     });
-    layer.setAttr('ack', ack);
+    layer.attrs.ack = ack;
 
     let dataOffset = parentLayer.payload.readUInt8(12) >> 4;
-    layer.addItem({
+    layer.items.push({
       name: 'Data offset',
       value: dataOffset,
       range: '12:13'
     });
-    layer.setAttr('dataOffset', dataOffset);
+    layer.attrs.dataOffset = dataOffset;
 
     let table = {
       'NS': 0x1 << 8,
@@ -76,7 +80,7 @@ export default class Dissector {
     let flags = Flags(table, parentLayer.payload.readUInt8(13) |
       ((parentLayer.payload.readUInt8(12) & 0x1) << 8));
 
-    layer.addItem({
+    layer.items.push({
       name: 'Flags',
       value: flags,
       data: '12:14',
@@ -130,28 +134,28 @@ export default class Dissector {
     });
 
     let window = parentLayer.payload.readUInt16BE(14);
-    layer.addItem({
+    layer.items.push({
       name: 'Window size',
       value: window,
       range: '14:16'
     });
-    layer.setAttr('window', window);
+    layer.attrs.window = window;
 
     let checksum = parentLayer.payload.readUInt16BE(16);
-    layer.addItem({
+    layer.items.push({
       name: 'Checksum',
       value: checksum,
       range: '16:18'
     });
-    layer.setAttr('checksum', checksum);
+    layer.attrs.checksum = checksum;
 
     let urgent = parentLayer.payload.readUInt16BE(18);
-    layer.addItem({
+    layer.items.push({
       name: 'Urgent pointer',
       value: urgent,
       range: '18:20'
     })
-    layer.setAttr('urgent', urgent);
+    layer.attrs.urgent = urgent;
 
     let optionDataOffset = dataOffset * 4;
     let optionItems = [];
@@ -246,27 +250,33 @@ export default class Dissector {
     }
 
     option.value = optionItems.join(',');
-    layer.addItem(option);
+    layer.items.push(option);
 
     layer.range = optionDataOffset + ':';
     layer.payload = parentLayer.payload.slice(optionDataOffset);
-    layer.addItem({
+    layer.items.push({
       name: 'Payload',
       value: layer.payload,
       range: optionDataOffset + ':'
     });
 
-    layer.summary = `${layer.attr('src').data} -> ${layer.attr('dst').data} seq:${seq} ack:${ack}`;
+    layer.summary = `${layer.attrs.src.data} -> ${layer.attrs.dst.data} seq:${seq} ack:${ack}`;
 
-    let id = layer.attr('src').data + '/' + layer.attr('dst').data;
-    let chunk = new StreamChunk(parentLayer.namespace, id, layer);
-    chunk.setAttr('payload', layer.payload);
-    chunk.setAttr('seq', seq);
+    let id = layer.attrs.src.data + '/' + layer.attrs.dst.data;
+    let chunk = {
+      namespace: parentLayer.namespace,
+      id: id,
+      layer: layer,
+      attrs: {
+        payload: layer.payload,
+        seq: seq
+      }
+    };
 
     if (flags.data['FIN'] && flags.data['ACK']) {
       chunk.end = true;
     }
 
-    return [layer, chunk];
+    return [new Layer(layer), new StreamChunk(chunk)];
   }
 };

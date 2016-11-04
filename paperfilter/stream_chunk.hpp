@@ -2,15 +2,16 @@
 #define STREAM_CHUNK_HPP
 
 #include <memory>
+#include <unordered_map>
 #include <string>
 #include <v8.h>
+#include "item_value.hpp"
 
 class Layer;
 
 class StreamChunk {
 public:
-  StreamChunk(const std::string &ns, const std::string &id,
-              v8::Local<v8::Object> obj);
+  StreamChunk(v8::Local<v8::Object> obj);
   StreamChunk(const StreamChunk &stream);
   ~StreamChunk();
   StreamChunk &operator=(const StreamChunk &) = delete;
@@ -18,8 +19,8 @@ public:
   std::string id() const;
   std::shared_ptr<Layer> layer() const;
   void setLayer(const std::shared_ptr<Layer> &layer);
-  void setAttr(const std::string &name, v8::Local<v8::Object> obj);
-  v8::Local<v8::Value> attr(const std::string &name) const;
+  void setAttr(const std::string &name, v8::Local<v8::Value> obj);
+  std::unordered_map<std::string, ItemValue> attrs() const;
   void setEnd(bool end);
   bool end() const;
 

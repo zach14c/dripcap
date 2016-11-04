@@ -8,77 +8,81 @@ export default class IPv6Dissector {
   }
 
   analyze(packet, parentLayer) {
-    let layer = new Layer('::Ethernet::IPv6');
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = '::Ethernet::IPv6';
     layer.name = 'IPv6';
     layer.id = 'ipv6';
 
     let version = parentLayer.payload.readUInt8(0) >> 4;
-    layer.addItem({
+    layer.items.push({
       name: 'Version',
       value: version,
       range: '0:1'
     });
-    layer.setAttr('version', version);
+    layer.attrs.version = version;
 
     let trafficClass =
       ((parentLayer.payload.readUInt8(0, true) & 0b00001111) << 4) |
       ((parentLayer.payload.readUInt8(1, true) & 0b11110000) >> 4);
-    layer.addItem({
+    layer.items.push({
       name: 'Traffic Class',
       value: trafficClass,
       range: '0:2'
     });
-    layer.setAttr('trafficClass', trafficClass);
+    layer.attrs.trafficClass = trafficClass;
 
     let flowLevel = parentLayer.payload.readUInt16BE(2) |
       ((parentLayer.payload.readUInt8(1, true) & 0b00001111) << 16);
-    layer.addItem({
+    layer.items.push({
       name: 'Flow Label',
       value: flowLevel,
       range: '1:4'
     });
-    layer.setAttr('flowLevel', flowLevel);
+    layer.attrs.flowLevel = flowLevel;
 
     let payloadLength = parentLayer.payload.readUInt16BE(4);
-    layer.addItem({
+    layer.items.push({
       name: 'Payload Length',
       value: payloadLength,
       range: '4:6'
     });
-    layer.setAttr('payloadLength', payloadLength);
+    layer.attrs.payloadLength = payloadLength;
 
     let nextHeader = parentLayer.payload.readUInt8(6);
     let nextHeaderRange = '6:7';
 
-    layer.addItem({
+    layer.items.push({
       name: 'Next Header',
       value: Enum(protocolTable, nextHeader),
       range: nextHeaderRange
     });
 
     let hopLimit = parentLayer.payload.readUInt8(7, true);
-    layer.addItem({
+    layer.items.push({
       name: 'Hop Limit',
       value: hopLimit,
       range: '7:8'
     });
-    layer.setAttr('hopLimit', hopLimit);
+    layer.attrs.hopLimit = hopLimit;
 
     let source = IPv6Address(parentLayer.payload.slice(8, 24));
-    layer.addItem({
+    layer.items.push({
       name: 'Source IP Address',
       value: source,
       range: '8:24'
     });
-    layer.setAttr('src', source);
+    layer.attrs.src = source;
 
     let destination = IPv6Address(parentLayer.payload.slice(24, 40));
-    layer.addItem({
+    layer.items.push({
       name: 'Destination IP Address',
       value: destination,
       range: '24:40'
     });
-    layer.setAttr('dst', destination);
+    layer.attrs.dst = destination;
 
     let offset = 40;
     let ext = true;
@@ -125,7 +129,7 @@ export default class IPv6Dissector {
         value: Enum(protocolTable, nextHeader),
         range: nextHeaderRange
       });
-      layer.addItem(item);
+      layer.items.push(item);
 
       offset += optlen;
     }
@@ -136,17 +140,17 @@ export default class IPv6Dissector {
       layer.namespace = `::Ethernet::IPv6::<${protocolName}>`;
     }
 
-    layer.addItem({
+    layer.items.push({
       name: 'Protocol',
       value: protocol,
       data: nextHeaderRange
     });
-    layer.setAttr('protocol', protocol);
+    layer.attrs.protocol = protocol;
 
     layer.range = offset + ':';
     layer.payload = parentLayer.payload.slice(offset);
 
-    layer.addItem({
+    layer.items.push({
       name: 'Payload',
       value: layer.payload,
       range: offset + ':'
@@ -157,7 +161,7 @@ export default class IPv6Dissector {
       layer.summary = `[${protocolName}] ` + layer.summary;
     }
 
-    return [layer];
+    return new Layer(layer);
   }
 }
 

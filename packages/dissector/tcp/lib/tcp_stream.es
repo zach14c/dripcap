@@ -13,14 +13,18 @@ export default class Dissector {
   analyze(packet, parentLayer, chunk) {
 
     if (parentLayer.payload.length > 0) {
-      let ns = chunk.namespace.replace('<TCP>', 'TCP');
-      let stream = new StreamChunk(ns, chunk.id, parentLayer);
-      let payload = chunk.attr('payload').data;
-      let seq = chunk.attr('seq').data;
+      let stream = {
+        namespace: chunk.namespace.replace('<TCP>', 'TCP'),
+        id: chunk.id,
+        layer: parentLayer,
+        attrs: {}
+      };
+      let payload = chunk.attrs.payload.data;
+      let seq = chunk.attrs.seq.data;
 
       if (this.seq < 0) {
         this.length += payload.length;
-        stream.setAttr('payload', payload);
+        stream.attrs.payload = payload;
       } else {
         let start = this.seq + this.length;
         let length = payload.length;
@@ -28,10 +32,10 @@ export default class Dissector {
           length -= (start - seq);
         }
         this.length += length;
-        stream.setAttr('payload', payload);
+        stream.attrs.payload = payload;
       }
       this.seq = seq;
-      return [stream];
+      return new StreamChunk(stream);
     }
 
   }

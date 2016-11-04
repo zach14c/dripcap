@@ -8,30 +8,34 @@ export default class Dissector {
   }
 
   analyze(packet, parentLayer) {
-    let layer = new Layer('::Ethernet');
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = '::Ethernet';
     layer.name = 'Ethernet';
     layer.id = 'eth';
 
     let destination = MACAddress(parentLayer.payload.slice(0, 6));
-    layer.addItem({
+    layer.items.push({
       name: 'Destination',
       value: destination,
       range: '0:6'
     });
-    layer.setAttr('dst', destination);
+    layer.attrs.dst = destination;
 
     let source = MACAddress(parentLayer.payload.slice(6, 12));
-    layer.addItem({
+    layer.items.push({
       name: 'Source',
       value: source,
       range: '6:12'
     });
-    layer.setAttr('src', source);
+    layer.attrs.src = source;
 
     let protocolName;
     let type = parentLayer.payload.readUInt16BE(12);
     if (type <= 1500) {
-      layer.addItem({
+      layer.items.push({
         name: 'Length',
         value: type,
         range: '12:14'
@@ -47,12 +51,12 @@ export default class Dissector {
       };
 
       let etherType = Enum(table, type);
-      layer.addItem({
+      layer.items.push({
         name: 'EtherType',
         value: etherType,
         range: '12:14'
       });
-      layer.setAttr('etherType', etherType);
+      layer.attrs.etherType = etherType;
 
       protocolName = table[type];
       if (protocolName != null) {
@@ -67,12 +71,12 @@ export default class Dissector {
 
     layer.range = '14:';
     layer.payload = parentLayer.payload.slice(14);
-    layer.addItem({
+    layer.items.push({
       name: 'Payload',
       value: layer.payload,
       range: '14:'
     });
 
-    return [layer];
+    return new Layer(layer);
   }
 };
