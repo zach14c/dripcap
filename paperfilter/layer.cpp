@@ -26,8 +26,7 @@ Layer::Layer(const std::string &ns) : d(std::make_shared<Private>()) {
   d->ns = ns;
 }
 
-Layer::Layer(v8::Local<v8::Object> options)
-    : d(std::make_shared<Private>()) {
+Layer::Layer(v8::Local<v8::Object> options) : d(std::make_shared<Private>()) {
   v8::Isolate *isolate = v8::Isolate::GetCurrent();
   v8pp::get_option(isolate, options, "namespace", d->ns);
   v8pp::get_option(isolate, options, "name", d->name);

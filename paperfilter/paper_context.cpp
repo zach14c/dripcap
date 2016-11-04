@@ -82,13 +82,11 @@ void initModule(v8pp::module *module, v8::Isolate *isolate) {
 
   v8pp::class_<StreamChunk> StreamChunk_class(isolate);
   StreamChunk_class
-      .ctor<const std::string &, const std::string &, v8::Local<v8::Object>>();
+      .ctor<v8::Local<v8::Object>>();
   StreamChunk_class.set("namespace", v8pp::property(&StreamChunk::ns));
   StreamChunk_class.set("id", v8pp::property(&StreamChunk::id));
   StreamChunk_class.set("attr", &StreamChunk::attr);
-  StreamChunk_class.set("setAttr", &StreamChunk::setAttr);
-  StreamChunk_class.set(
-      "end", v8pp::property(&StreamChunk::end, &StreamChunk::setEnd));
+  StreamChunk_class.set("end", v8pp::property(&StreamChunk::end));
 
   v8pp::class_<LargeBuffer> LargeBuffer_class(isolate);
   LargeBuffer_class.ctor<>();
