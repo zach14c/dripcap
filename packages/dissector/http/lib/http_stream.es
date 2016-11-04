@@ -11,7 +11,11 @@ export default class Dissector {
     let re = /(GET|POST) (\S+) (HTTP\/(0\.9|1\.0|1\.1))\r\n/;
     let m = body.match(re);
     if (m != null) {
-      let layer = new Layer(chunk.namespace + '::HTTP');
+      let layer = {
+        items: [],
+        attrs: {}
+      };
+      layer.namespace = chunk.namespace + '::HTTP';
       layer.name = 'HTTP';
       layer.id = 'http';
 
@@ -22,34 +26,34 @@ export default class Dissector {
       let method = m[1];
       let cursor = method.length;
 
-      layer.addItem({
+      layer.items.push({
         name: 'Method',
         value: method,
         range: '0:' + cursor
       });
-      layer.setAttr('method', method);
+      layer.attrs.method = method;
 
       let path = m[2];
       cursor++;
-      layer.addItem({
+      layer.items.push({
         name: 'Path',
         value: path,
         range: cursor + ':' + (cursor + path.length)
       });
-      layer.setAttr('path', path);
+      layer.attrs.path = path;
 
       let version = m[3];
       cursor += path.length + 1;
-      layer.addItem({
+      layer.items.push({
         name: 'Version',
         value: version,
         range: cursor + ':' + (cursor + version.length)
       });
 
-      layer.setAttr('version', version);
-      layer.setAttr('src', parentLayer.attr('src'));
-      layer.setAttr('dst', parentLayer.attr('dst'));
-      return [layer];
+      layer.attrs.version = version;
+      layer.attrs.src = parentLayer.attr('src');
+      layer.attrs.dst = parentLayer.attr('dst');
+      return new Layer(layer);
     }
   }
 };

@@ -8,49 +8,53 @@ export default class Dissector {
   }
 
   analyze(packet, parentLayer) {
-    let layer = new Layer('::Ethernet::IPv4');
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = '::Ethernet::IPv4';
     layer.name = 'IPv4';
     layer.id = 'ipv4';
 
     let version = parentLayer.payload.readUInt8(0) >> 4;
-    layer.addItem({
+    layer.items.push({
       name: 'Version',
       value: version,
       range: '0:1'
     });
-    layer.setAttr('version', version);
+    layer.attrs.version = version;
 
     let headerLength = parentLayer.payload.readUInt8(0) & 0b00001111;
-    layer.addItem({
+    layer.items.push({
       name: 'Internet Header Length',
       value: headerLength,
       range: '0:1'
     });
-    layer.setAttr('headerLength', headerLength);
+    layer.attrs.headerLength = headerLength;
 
     let type = parentLayer.payload.readUInt8(1);
-    layer.addItem({
+    layer.items.push({
       name: 'Type of service',
       value: type,
       range: '1:2'
     });
-    layer.setAttr('type', type);
+    layer.attrs.type = type;
 
     let totalLength = parentLayer.payload.readUInt16BE(2);
-    layer.addItem({
+    layer.items.push({
       name: 'Total Length',
       value: totalLength,
       range: '2:4'
     });
-    layer.setAttr('totalLength', totalLength);
+    layer.attrs.totalLength = totalLength;
 
     let id = parentLayer.payload.readUInt16BE(4);
-    layer.addItem({
+    layer.items.push({
       name: 'Identification',
       value: id,
       range: '4:6'
     });
-    layer.setAttr('id', id);
+    layer.attrs.id = id;
 
     let flagTable = {
       'Reserved': 0x1,
@@ -60,7 +64,7 @@ export default class Dissector {
 
     let flags = Flags(flagTable, (parentLayer.payload.readUInt8(6) >> 5) & 0x7);
 
-    layer.addItem({
+    layer.items.push({
       name: 'Flags',
       value: flags,
       range: '6:7',
@@ -84,35 +88,35 @@ export default class Dissector {
         }
       ]
     });
-    layer.setAttr('flags', {
+    layer.attrs.flags = {
       DoNotFragment: flags.data['Don\'t Fragment'],
       MoreFragments: flags.data['More Fragments']
-    });
+    };
 
     let fragmentOffset = parentLayer.payload.readUInt8(6) & 0b0001111111111111;
-    layer.addItem({
+    layer.items.push({
       name: 'Fragment Offset',
       value: fragmentOffset,
       range: '6:8',
     });
-    layer.setAttr('fragmentOffset', fragmentOffset);
+    layer.attrs.fragmentOffset = fragmentOffset;
 
     let ttl = parentLayer.payload.readUInt8(8);
-    layer.addItem({
+    layer.items.push({
       name: 'TTL',
       value: ttl,
       range: '8:9',
     });
-    layer.setAttr('ttl', ttl);
+    layer.attrs.ttl = ttl;
 
     let protocolNumber = parentLayer.payload.readUInt8(9);
     let protocol = Enum(protocolTable, protocolNumber);
-    layer.addItem({
+    layer.items.push({
       name: 'Protocol',
       value: protocol,
       range: '9:10'
     });
-    layer.setAttr('protocol', protocol);
+    layer.attrs.protocol = protocol;
 
     let protocolName = protocolTable[protocolNumber]
     if (protocolName != null) {
@@ -120,32 +124,32 @@ export default class Dissector {
     }
 
     let checksum = parentLayer.payload.readUInt16BE(10);
-    layer.addItem({
+    layer.items.push({
       name: 'Header Checksum',
       value: checksum,
       range: '10:12',
     });
-    layer.setAttr('checksum', checksum);
+    layer.attrs.checksum = checksum;
 
     let source = IPv4Address(parentLayer.payload.slice(12, 16));
-    layer.addItem({
+    layer.items.push({
       name: 'Source IP Address',
       value: source,
       range: '12:16',
     });
-    layer.setAttr('src', source);
+    layer.attrs.src = source;
 
     let destination = IPv4Address(parentLayer.payload.slice(16, 20));
-    layer.addItem({
+    layer.items.push({
       name: 'Destination IP Address',
       value: destination,
       range: '16:20',
     });
-    layer.setAttr('dst', destination);
+    layer.attrs.dst = destination;
 
     layer.range = '20:' + totalLength.data;
     layer.payload = parentLayer.payload.slice(20, totalLength.data);
-    layer.addItem({
+    layer.items.push({
       name: 'Payload',
       value: layer.payload,
       range: '20:' + totalLength.data
@@ -156,7 +160,7 @@ export default class Dissector {
       layer.summary = `[${protocolName}] ` + layer.summary;
     }
 
-    return [layer];
+    return new Layer(layer);
   }
 };
 

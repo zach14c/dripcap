@@ -7,7 +7,11 @@ export default class DNSDissector {
   }
 
   analyze(packet, parentLayer) {
-    let layer = new Layer(parentLayer.namespace + '::DNS');
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = parentLayer.namespace + '::DNS';
     layer.name = 'DNS';
     layer.id = 'dns';
 
@@ -44,99 +48,99 @@ export default class DNSDissector {
     let nsCount = parentLayer.payload.readUInt16BE(8);
     let arCount = parentLayer.payload.readUInt16BE(10);
 
-    layer.addItem({
+    layer.items.push({
       name: 'ID',
       value: id,
       range: '0:2'
     });
-    layer.setAttr('id', id);
+    layer.attrs.id = id;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Query/Response Flag',
       value: qr,
       range: '2:3'
     });
-    layer.setAttr('qr', qr);
+    layer.attrs.qr = qr;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Operation Code',
       value: opcode,
       range: '2:3'
     });
-    layer.setAttr('opcode', opcode);
+    layer.attrs.opcode = opcode;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Authoritative Answer Flag',
       value: aa,
       range: '2:3'
     });
-    layer.setAttr('aa', aa);
+    layer.attrs.aa = aa;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Truncation Flag',
       value: tc,
       range: '2:3'
     });
-    layer.setAttr('tc', tc);
+    layer.attrs.tc = tc;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Recursion Desired',
       value: rd,
       range: '2:3'
     });
-    layer.setAttr('rd', rd);
+    layer.attrs.rd = rd;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Recursion Available',
       value: ra,
       range: '3:4'
     });
-    layer.setAttr('ra', ra);
+    layer.attrs.ra = ra;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Response Code',
       value: rcode,
       range: '3:4'
     });
-    layer.setAttr('rcode', rcode);
+    layer.attrs.rcode = rcode;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Question Count',
       value: qdCount,
       range: '4:6'
     });
-    layer.setAttr('qdCount', qdCount);
+    layer.attrs.qdCount = qdCount;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Answer Record Count',
       value: anCount,
       range: '6:8'
     });
-    layer.setAttr('anCount', anCount);
+    layer.attrs.anCount = anCount;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Authority Record Count',
       value: nsCount,
       range: '8:10'
     });
-    layer.setAttr('nsCount', nsCount);
+    layer.attrs.nsCount = nsCount;
 
-    layer.addItem({
+    layer.items.push({
       name: 'Additional Record Count',
       value: arCount,
       range: '10:12'
     });
-    layer.setAttr('arCount', arCount);
+    layer.attrs.arCount = arCount;
 
     layer.payload = parentLayer.payload.slice(12);
-    layer.addItem({
+    layer.items.push({
       name: 'Payload',
       value: layer.payload,
       range: '12:'
     });
 
     layer.summary = `[${opcodeName}] [${rcodeName}] qd:${qdCount} an:${anCount} ns:${nsCount} ar:${arCount}`;
-    return [layer];
+    return new Layer(layer);
   }
 }
 

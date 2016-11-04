@@ -8,19 +8,23 @@ export default class UDPDissector {
   }
 
   analyze(packet, parentLayer) {
-    let layer = new Layer(parentLayer.namespace.replace('<UDP>', 'UDP'));
+    let layer = {
+      items: [],
+      attrs: {}
+    };
+    layer.namespace = parentLayer.namespace.replace('<UDP>', 'UDP');
     layer.name = 'UDP';
     layer.id = 'udp';
 
     let source = parentLayer.payload.readUInt16BE(0);
-    layer.addItem({
+    layer.items.push({
       name: 'Source port',
       value: source,
       range: '0:2'
     });
 
     let destination = parentLayer.payload.readUInt16BE(2);
-    layer.addItem({
+    layer.items.push({
       name: 'Destination port',
       value: destination,
       range: '2:4'
@@ -29,39 +33,39 @@ export default class UDPDissector {
     let srcAddr = parentLayer.attr('src');
     let dstAddr = parentLayer.attr('dst');
     if (srcAddr.type === 'dripcap/ipv4/addr') {
-      layer.setAttr('src', IPv4Host(srcAddr.data, source));
-      layer.setAttr('dst', IPv4Host(dstAddr.data, destination));
+      layer.attrs.src = IPv4Host(srcAddr.data, source);
+      layer.attrs.dst = IPv4Host(dstAddr.data, destination);
     } else if (srcAddr.type === 'dripcap/ipv6/addr') {
-      layer.setAttr('src', IPv6Host(srcAddr.data, source));
-      layer.setAttr('dst', IPv6Host(dstAddr.data, destination));
+      layer.attrs.src = IPv6Host(srcAddr.data, source);
+      layer.attrs.dst = IPv6Host(dstAddr.data, destination);
     }
 
     let length = parentLayer.payload.readUInt16BE(4);
-    layer.addItem({
+    layer.items.push({
       name: 'Length',
       value: length,
       range: '4:6'
     });
-    layer.setAttr('length', length);
+    layer.attrs.length = length;
 
     let checksum = parentLayer.payload.readUInt16BE(6);
-    layer.addItem({
+    layer.items.push({
       name: 'Checksum',
       value: checksum,
       range: '6:8'
     });
-    layer.setAttr('checksum', checksum);
+    layer.attrs.checksum = checksum;
 
     layer.range = '8:'+ length;
     layer.payload = parentLayer.payload.slice(8, length);
 
-    layer.addItem({
+    layer.items.push({
       name: 'Payload',
       value: layer.payload,
       range: '8:' + length
     });
 
-    layer.summary = `${layer.attr('src').data} -> ${layer.attr('dst').data}`;
-    return [layer];
+    layer.summary = `${layer.attrs.src.data} -> ${layer.attrs.dst.data}`;
+    return new Layer(layer);
   }
 }
