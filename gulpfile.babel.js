@@ -177,6 +177,7 @@ gulp.task('win32', cb => {
     platform: 'win32',
     arch: 'x64',
     icon: __dirname + '/images/dripcap.ico',
+    asar: true,
     win32metadata: {
       CompanyName: 'dripcap.org',
       FileDescription: '☕️ Caffeinated Packet Analyzer',
