@@ -8,7 +8,7 @@
     "url": "https://github.com/dripcap/dripcap.git"
   },
   "readme": "see README.md",
-  "main": "js/main.js",
+  "main": "node_modules/dripcap/main.js",
   "scripts": {
     "test": "gulp mocha"
   },

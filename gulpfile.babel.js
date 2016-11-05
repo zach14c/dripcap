@@ -41,15 +41,6 @@ gulp.task('mocha', () => {
     });
 });
 
-gulp.task('babel', () =>
-  gulp.src('./src/**/*.es', {
-    base: './src/'
-  })
-  .pipe(babel())
-  .pipe(gulp.dest('./.build/js/'))
-  .pipe(preservetime())
-);
-
 gulp.task('copy', () =>
   gulp.src([
     './package.json',
@@ -202,7 +193,7 @@ gulp.task('default', ['build'], cb => {
 });
 
 gulp.task('build', sequence(
-  ['babel', 'copy'],
+  'copy',
   'npm'
 ));
 

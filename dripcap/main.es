@@ -74,7 +74,7 @@ class Dripcap {
     };
 
     let mainWindow = new BrowserWindow(options);
-    mainWindow.loadURL(`file://${__dirname}/../render.html`);
+    mainWindow.loadURL(`file://${__dirname}/render.html`);
     mainWindow.webContents.on('did-finish-load', () => {
       mainWindow.show();
     });
