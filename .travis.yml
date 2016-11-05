@@ -23,7 +23,7 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source travis/osx-before-install.sh ;
   fi
 install:
-- sudo npm install -g gulp babel-cli node-gyp
+- npm install -g gulp babel-cli node-gyp
 - npm install
 - gulp build
 before_script:

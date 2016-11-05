@@ -1,5 +1,5 @@
 brew update
-brew install nvm gpg jq
+brew install gpg jq
 nvm install 7
 
 export PATH=/usr/local/opt/gnupg/libexec/gpgbin:$PATH
