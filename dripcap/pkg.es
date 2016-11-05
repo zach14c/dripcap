@@ -53,7 +53,10 @@ export default class Package extends EventEmitter {
             acorn: {
               ecmaVersion: 8
             },
-            plugins: [],
+            plugins: [{
+              name: 'globalPaths',
+              banner: `require('module').globalPaths.push('${this.path}/node_modules')`
+            }],
             onwarn: (e) => {}
           }).then((bundle) => {
             const result = bundle.generate({
