@@ -145,6 +145,9 @@ gulp.task('darwin', cb => {
     version: pkg.devDependencies.electron,
     out: __dirname + '/.builtapp',
     platform: 'darwin',
+    asar: {
+      unpackDir: 'node_modules/dripcap-helper'
+    },
     'osx-sign': true,
     icon: __dirname + '/images/dripcap.icns'
   };
