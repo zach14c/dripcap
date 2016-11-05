@@ -27,9 +27,7 @@ export default class Component {
             plugins: [
               riotup()
             ],
-            onwarn: (e) => {
-              console.log(e)
-            }
+            onwarn: (e) => {}
           });
           const result = bundle.generate({
             format: 'cjs'
