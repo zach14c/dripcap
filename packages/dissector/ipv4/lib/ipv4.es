@@ -147,12 +147,12 @@ export default class Dissector {
     });
     layer.attrs.dst = destination;
 
-    layer.range = '20:' + totalLength.data;
+    layer.range = '20:' + totalLength;
     layer.payload = parentLayer.payload.slice(20, totalLength.data);
     layer.items.push({
       name: 'Payload',
       value: layer.payload,
-      range: '20:' + totalLength.data
+      range: '20:' + totalLength
     });
 
     layer.summary = `${source.data} -> ${destination.data}`;
