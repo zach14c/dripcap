@@ -8,7 +8,7 @@ install:
 build_script:
 - ps: gulp build
 test_script:
-- ps: gulp out
+- ps: npm test
 after_test:
 - ps: travis\windows-before-deploy.ps1
 artifacts:
