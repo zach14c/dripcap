@@ -122,17 +122,24 @@ gulp.task('debian-pkg', cb =>
 
 );
 
-gulp.task('debian-bin', cb =>
-  gulp.src('./.out/**')
-  .pipe(electron({
+gulp.task('debian-bin', cb => {
+  let options = {
+    dir: __dirname + '/.out',
     version: pkg.devDependencies.electron,
-    platform: 'linux',
-    arch: 'x64',
-    token: process.env['ELECTRON_GITHUB_TOKEN']
-  }))
-  .pipe(symdest('./.debian/usr/share/dripcap'))
-
-);
+    out: __dirname + '/.builtapp',
+    asar: true,
+    platform: 'linux'
+  };
+  return new Promise((res, rej) => {
+    packager(options, (err, appPaths) => {
+      if (err != null) {
+        rej(err);
+      } else {
+        res(appPaths);
+      }
+    });
+  });
+});
 
 gulp.task('debian', sequence(
   'debian-bin',
