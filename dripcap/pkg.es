@@ -89,9 +89,11 @@ export default class Package extends EventEmitter {
   activate() {
     if (this._activated) return;
     this._activated = true;
-    this._watcher = fs.watch(this.path, {recursive: true}, _.debounce(() => {
-      this.emit('file-updated');
-    }, 100));
+    if (!this.path.includes('/app.asar/')) {
+      this._watcher = fs.watch(this.path, {recursive: true}, _.debounce(() => {
+        this.emit('file-updated');
+      }, 100));
+    }
     return this._resolve();
   }
 
@@ -107,7 +109,7 @@ export default class Package extends EventEmitter {
     if (!this._activated) return;
     this._activated = false;
     await this.load();
-    this._watcher.close();
+    if (this._watcher) this._watcher.close();
     return new Promise((resolve, reject) => {
       if (this.root != null) {
         try {
