@@ -1,6 +1,6 @@
 {
   "name": "arp",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Dripcap ARP Dissector",
   "repository": {

@@ -1,5 +1,5 @@
 <packet-view-dripcap-enum>
-  <script type="babel">
+  <script>
     this.on('update', () => {
       let keys = Object.keys(opts.val).filter(k => !k.startsWith('_') && opts.val[k]);
       this.name = keys.length > 0 ? keys.join(', ') : '[Unknown]';
@@ -10,7 +10,7 @@
 </packet-view-dripcap-enum>
 
 <packet-view-dripcap-flags>
-  <script type="babel">
+  <script>
     this.on('update', () => {
       let keys = Object.keys(opts.val).filter(k => !k.startsWith('_') && opts.val[k]);
       this.name = keys.length > 0 ? keys.join(', ') : '[None]';
@@ -21,8 +21,7 @@
 </packet-view-dripcap-flags>
 
 <packet-view-custom-value>
-  <script type="babel">
-    import riot from 'riot';
+  <script>
     this.on('mount', () => {
       if (opts.tag != null) {
         riot.mount(this.root, opts.tag, {val: opts.val});
@@ -52,9 +51,7 @@
   <i if={ base==10 } oncontextmenu={ context }>{ opts.val.toString(10) }</i>
   <i if={ base==16 } oncontextmenu={ context }>
     <i class="base">0x</i>{ opts.val.toString(16) }</i>
-  <script type="babel">
-    import {remote} from 'electron';
-    import {Menu} from 'dripcap';
+  <script>
     this.base = 10;
 
     this.context = e => {
@@ -66,7 +63,7 @@
 
 <packet-view-string-value>
   <i></i>
-  <script type="babel">
+  <script>
     import $ from 'jquery';
 
     this.on('update', () => {
@@ -96,10 +93,7 @@
   </ul>
 </li>
 
-<script type="babel">
-  import {remote} from 'electron';
-  import {Menu} from 'dripcap';
-  import riot from 'riot';
+<script>
   this.show = false;
 
   this.toggle = e => {
@@ -179,8 +173,7 @@
 </ul>
 <packet-view-layer each={ ns in rootKeys } layer={ rootLayers[ns] } range={ range }></packet-view-layer>
 
-<script type="babel">
-  import {remote} from 'electron';
+<script>
   import {Menu, PubSub} from 'dripcap';
   this.visible = true;
 
@@ -254,9 +247,8 @@
   <li if={ packet.caplen < packet.length }> <i class="fa fa-exclamation-circle text-warn"> This packet has been truncated.</i> </li> </ul> <packet-view-layer each={ ns in rootKeys } layer={ rootLayers[ns] }></packet-view-layer>
 </div>
 
-<script type="babel">
+<script>
   import {remote} from 'electron';
-  import {PubSub} from 'dripcap';
 
   this.set = pkt => {
     this.packet = pkt;

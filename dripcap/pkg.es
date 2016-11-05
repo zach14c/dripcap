@@ -1,36 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import _ from 'underscore';
+import { rollup } from 'rollup';
 import config from 'dripcap/config';
-import babelTemplate from 'babel-template';
 import {
   EventEmitter
 } from 'events';
-
-function globalPaths() {
-  return {
-    visitor: {
-      Program: {
-        exit: function(p) {
-          let modulePath = path.resolve(__dirname, '..').split(path.sep).join('/');
-          let code = `require('module').globalPaths.push('${modulePath}');`;
-          let node = babelTemplate(code)();
-          p.unshiftContainer('body', [node]);
-        },
-      },
-    },
-  };
-}
-
-require("babel-register")({
-  extensions: [".es"],
-  plugins: ["add-module-exports", [
-      "transform-es2015-modules-commonjs", {
-        "allowTopLevelThis": true
-      }
-    ], globalPaths
-  ]
-});
 
 export default class Package extends EventEmitter {
   constructor(jsonPath, profile) {
@@ -72,29 +47,37 @@ export default class Package extends EventEmitter {
       .then(() => {
         return new Promise((resolve, reject) => {
           let req = path.resolve(this.path, this.main);
-          let res = null;
-
-          const cwd = process.cwd();
-          process.chdir(__dirname);
-          try {
-            let klass = require(req);
-            if (klass.__esModule) {
-              klass = klass.default;
+          rollup({
+            entry: req,
+            external: ['dripcap'],
+            acorn: {
+              ecmaVersion: 8
+            },
+            plugins: [],
+            onwarn: (e) => {
+              console.log(e)
             }
-            this.root = new klass(this);
-            res = this.root.activate();
-          } catch (e) {
-            reject(e);
-            return;
-          } finally {
-            process.chdir(cwd);
-          }
+          }).then((bundle) => {
+            const result = bundle.generate({
+              format: 'cjs'
+            });
+            let module = {exports: {}};
 
-          if (res instanceof Promise) {
-            return res.then(() => resolve(this));
-          } else {
-            return resolve(this);
-          }
+            try {
+              new Function('module', '__dirname', result.code)(module, path.dirname(req));
+              let klass = module.exports;
+              this.root = new klass(this);
+              let res = this.root.activate();
+              if (res instanceof Promise) {
+                return res.then(() => resolve(this));
+              } else {
+                return resolve(this);
+              }
+            } catch (e) {
+              reject(e);
+              return;
+            }
+          });
         });
       });
   }

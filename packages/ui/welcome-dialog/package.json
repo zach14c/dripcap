@@ -1,6 +1,6 @@
 {
   "name": "welcome-dialog",
-  "main": "./lib/welcome-dialog",
+  "main": "./lib/welcome-dialog.es",
   "license": "MIT",
   "description": "Dripcap Welcome Dialog",
   "repository": {

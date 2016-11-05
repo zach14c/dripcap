@@ -39,16 +39,12 @@
   :scope { padding: 18px; label { margin: 5px 0; display: block; } ul { list-style: none; padding: 0; } li { padding: 6px 0; } }
 </style>
 
-<script type="babel">
+<script>
   import $ from 'jquery';
   import request from 'request';
   import semver from 'semver';
   import url from 'url';
-  import {
-    Package,
-    Action,
-    Profile
-  } from 'dripcap';
+  import { Package, Action, Profile } from 'dripcap';
 
   this.installing = false;
   this.message = '';

@@ -17,7 +17,7 @@
     </ul>
   </li>
 
-  <script type="babel">
+  <script>
     this.show = false;
 
     this.toggle = e => {
@@ -34,7 +34,7 @@
     <log-view-item each={ logs } data={ this }></log-view-item>
   </ul>
 
-  <script type="babel">
+  <script>
     this.logs = [];
   </script>
 

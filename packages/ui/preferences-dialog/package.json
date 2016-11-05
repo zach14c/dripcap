@@ -1,6 +1,6 @@
 {
   "name": "preferences-dialog",
-  "main": "./lib/preferences-dialog",
+  "main": "./lib/preferences-dialog.es",
   "license": "MIT",
   "description": "Dripcap Preferences Dialog",
   "repository": {

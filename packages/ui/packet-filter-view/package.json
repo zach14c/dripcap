@@ -1,6 +1,6 @@
 {
   "name": "packet-filter-view",
-  "main": "./lib/packet-filter-view",
+  "main": "./lib/packet-filter-view.es",
   "license": "MIT",
   "description": "Dripcap Packet Filter View",
   "repository": {

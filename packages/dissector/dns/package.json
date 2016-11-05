@@ -1,6 +1,6 @@
 {
   "name": "dns",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Dripcap DNS Dissector",
   "repository": {

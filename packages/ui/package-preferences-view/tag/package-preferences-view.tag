@@ -19,7 +19,7 @@
   </ul>
 </li>
 
-<script type="babel">
+<script>
   import $ from 'jquery';
 
   this.on('mount', () => {
@@ -37,12 +37,9 @@
   <package-preferences-view-item each={ pkg in packageList } pkg={ pkg }></package-preferences-view-item>
 </ul>
 
-<script type="babel">
+<script>
   import _ from 'underscore';
-  import $ from 'jquery';
-  import {
-    Package
-  } from 'dripcap';
+  import { Package } from 'dripcap';
 
   this.setEnabled = e => {
     let {pkg} = e.item;

@@ -1,6 +1,6 @@
 {
   "name": "http",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Dripcap HTTP Dissector",
   "repository": {

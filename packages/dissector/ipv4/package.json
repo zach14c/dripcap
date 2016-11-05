@@ -1,6 +1,6 @@
 {
   "name": "ipv4",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Dripcap IPv4 Dissector",
   "repository": {

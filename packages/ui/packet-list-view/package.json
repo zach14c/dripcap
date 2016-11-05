@@ -1,6 +1,6 @@
 {
   "name": "packet-list-view",
-  "main": "./lib/packet-list-view",
+  "main": "./lib/packet-list-view.es",
   "license": "MIT",
   "description": "Dripcap Packet List View",
   "repository": {

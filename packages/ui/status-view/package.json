@@ -1,6 +1,6 @@
 {
   "name": "status-view",
-  "main": "./lib/status-view",
+  "main": "./lib/status-view.es",
   "license": "MIT",
   "description": "Dripcap Status View",
   "repository": {

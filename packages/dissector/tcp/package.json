@@ -1,6 +1,6 @@
 {
   "name": "tcp",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Dripcap TCP Dissector",
   "repository": {

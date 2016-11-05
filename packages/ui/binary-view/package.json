@@ -1,6 +1,6 @@
 {
   "name": "binary-view",
-  "main": "./lib/binary-view",
+  "main": "./lib/binary-view.es",
   "license": "MIT",
   "description": "Dripcap Binary View",
   "repository": {

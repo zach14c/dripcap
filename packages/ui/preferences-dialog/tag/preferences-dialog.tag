@@ -9,7 +9,7 @@
     }
   </style>
 
-  <script type="babel">
+  <script>
     this.setInterfaceList = list => {
       this.interfaceList = list;
     };

@@ -17,6 +17,9 @@ function roll(script) {
   return rollup({
     entry: script,
     external: ['dripcap'],
+    acorn: {
+      ecmaVersion: 8
+    },
     plugins: [
       nodeResolve({ jsnext: true, main: true }),
       commonjs()

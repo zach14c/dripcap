@@ -1,6 +1,6 @@
 {
   "name": "package-preferences-view",
-  "main": "./lib/package-preferences-view",
+  "main": "./lib/package-preferences-view.es",
   "license": "MIT",
   "description": "Dripcap Package Preferences View",
   "repository": {

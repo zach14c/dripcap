@@ -30,7 +30,7 @@
     }
   </style>
 
-  <script type="babel">
+  <script>
     import $ from 'jquery';
 
     this.visible = false;

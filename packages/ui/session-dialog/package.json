@@ -1,6 +1,6 @@
 {
   "name": "session-dialog",
-  "main": "./lib/session-dialog",
+  "main": "./lib/session-dialog.es",
   "license": "MIT",
   "description": "Dripcap Session Dialog",
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "modal-dialog",
-  "main": "./lib/modal-dialog",
+  "main": "./lib/modal-dialog.es",
   "license": "MIT",
   "description": "Dripcap Modal Dialog",
   "repository": {

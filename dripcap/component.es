@@ -21,6 +21,9 @@ export default class Component {
           let bundle = await rollup({
             entry: tag,
             external: ['dripcap'],
+            acorn: {
+              ecmaVersion: 8
+            },
             plugins: [
               riotup()
             ],

@@ -27,13 +27,9 @@
     }
   </style>
 
-  <script type="babel">
+  <script>
     import $ from 'jquery';
-    import {
-      Session,
-      PubSub,
-      Profile
-    } from 'dripcap';
+    import { Session, PubSub, Profile } from 'dripcap';
 
     this.setInterfaceList = list => {
       return this.interfaceList = list;

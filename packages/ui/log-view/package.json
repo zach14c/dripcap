@@ -1,6 +1,6 @@
 {
   "name": "log-view",
-  "main": "./lib/log-view",
+  "main": "./lib/log-view.es",
   "license": "MIT",
   "description": "Dripcap Log View",
   "repository": {

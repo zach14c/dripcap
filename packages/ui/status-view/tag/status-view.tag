@@ -54,7 +54,7 @@
     }
   </style>
 
-  <script type="babel">
+  <script>
     import $ from 'jquery';
     import {Action} from 'dripcap';
 

@@ -1,6 +1,6 @@
 {
   "name": "pcap-file",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Load pcap files",
   "repository": {

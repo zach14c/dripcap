@@ -10,7 +10,7 @@
     Click here to show more { Math.min(1024, pkt.len - pkt.payload.length - visibleLength) } bytes.
   </a>
 
-  <script type="babel">
+  <script>
     import $ from 'jquery';
 
     this.hexhtml = '';

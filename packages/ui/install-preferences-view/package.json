@@ -1,6 +1,6 @@
 {
   "name": "install-preferences-view",
-  "main": "./lib/install-preferences-view",
+  "main": "./lib/install-preferences-view.es",
   "license": "MIT",
   "description": "Dripcap Install Preferences View",
   "repository": {

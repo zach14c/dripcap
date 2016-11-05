@@ -1,6 +1,6 @@
 {
   "name": "ipv6",
-  "main": "./lib/main",
+  "main": "./lib/main.es",
   "license": "MIT",
   "description": "Dripcap IPv6 Dissector",
   "repository": {
