@@ -24,7 +24,7 @@ before_install:
   fi
 install:
 - sudo npm install -g gulp babel-cli node-gyp
-- yarn
+- npm install
 - gulp build
 before_script:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source travis/linux-before-script.sh
