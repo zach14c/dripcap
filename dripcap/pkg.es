@@ -54,9 +54,7 @@ export default class Package extends EventEmitter {
               ecmaVersion: 8
             },
             plugins: [],
-            onwarn: (e) => {
-              console.log(e)
-            }
+            onwarn: (e) => {}
           }).then((bundle) => {
             const result = bundle.generate({
               format: 'cjs'
