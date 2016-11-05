@@ -63,20 +63,24 @@ gulp.task('copy', () =>
   .pipe(preservetime())
 );
 
-gulp.task('npm', async function() {
-  await new Promise(res => npm.load({
+gulp.task('npm', () => {
+  let p = new Promise(res => npm.load({
     production: true,
     depth: 0
   }, res));
 
-  await new Promise(function(res) {
-    npm.prefix = './.build/';
-    return npm.commands.uninstall(['dripcap'], res);
+  p = p.then(() => {
+    return new Promise(function(res) {
+     npm.prefix = './.build/';
+     return npm.commands.uninstall(['dripcap'], res);
+   });
   });
 
-  await new Promise(function(res) {
-    npm.prefix = './.build/';
-    return npm.commands.install([], res);
+  p = p.then(() => {
+    return new Promise(function(res) {
+      npm.prefix = './.build/';
+      return npm.commands.install([], res);
+    });
   });
 
   let dirs = [];
@@ -86,15 +90,19 @@ gulp.task('npm', async function() {
   });
 
   for (let cwd of dirs) {
-    await new Promise(function(res) {
-      npm.prefix = cwd;
-      npm.commands.install([], res);
+    p = p.then(() => {
+      return new Promise(function(res) {
+        npm.prefix = cwd;
+        npm.commands.install([], res);
+      });
     });
   }
 
-  await new Promise(function(res) {
+  return p.then(() => {
+    return new Promise(function(res) {
     rimraf('./.build/dripcap', () => {
       rimraf('./.build/paperfilter', res);
+      });
     });
   });
 });

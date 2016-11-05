@@ -28,8 +28,7 @@ require("babel-register")({
       "transform-es2015-modules-commonjs", {
         "allowTopLevelThis": true
       }
-    ],
-    "transform-async-to-generator", globalPaths
+    ], globalPaths
   ]
 });
 
