@@ -1,6 +1,6 @@
 version: 1.0.{build}
 init:
-- ps: Install-Product node 6 x64
+- ps: Install-Product node 7 x64
 environment:
   CL: -DDELAYIMP_INSECURE_WRITABLE_HOOKS
 install:

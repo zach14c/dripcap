@@ -6,7 +6,7 @@ import electron from 'electron';
 beforeEach(function() {
   this.app = new Application({
     path: electron,
-    args: ['--enable-logging', __dirname + '/../.build'],
+    args: ['--enable-logging', __dirname + '/../.build', '--js-flags="--harmony-async-await"'],
     env: {
       'DRIPCAP_UI_TEST': __dirname + '/test'
     },

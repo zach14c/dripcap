@@ -33,7 +33,8 @@ gulp.task('mocha', () => {
       slow: 10000,
       retries: 3
     }))
-    .once('error', () => {
+    .once('error', (e) => {
+      console.warn(e);
       process.exit(1);
     })
     .once('end', () => {
