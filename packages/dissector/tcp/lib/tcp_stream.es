@@ -19,8 +19,8 @@ export default class Dissector {
         layer: parentLayer,
         attrs: {}
       };
-      let payload = chunk.attr('payload').data;
-      let seq = chunk.attr('seq').data;
+      let payload = chunk.attrs.payload.data;
+      let seq = chunk.attrs.seq.data;
 
       if (this.seq < 0) {
         this.length += payload.length;

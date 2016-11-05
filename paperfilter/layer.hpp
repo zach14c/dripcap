@@ -49,7 +49,6 @@ public:
 
   void setAttr(const std::string &name, v8::Local<v8::Value> obj);
   std::unordered_map<std::string, ItemValue> attrs() const;
-  v8::Local<v8::Value> attr(const std::string &name) const;
 
 private:
   class Private;

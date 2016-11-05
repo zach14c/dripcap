@@ -30,8 +30,8 @@ export default class UDPDissector {
       range: '2:4'
     });
 
-    let srcAddr = parentLayer.attr('src');
-    let dstAddr = parentLayer.attr('dst');
+    let srcAddr = parentLayer.attrs.src;
+    let dstAddr = parentLayer.attrs.dst;
     if (srcAddr.type === 'dripcap/ipv4/addr') {
       layer.attrs.src = IPv4Host(srcAddr.data, source);
       layer.attrs.dst = IPv4Host(dstAddr.data, destination);

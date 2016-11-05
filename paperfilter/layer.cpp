@@ -182,12 +182,3 @@ void Layer::setAttr(const std::string &name, v8::Local<v8::Value> obj) {
 std::unordered_map<std::string, ItemValue> Layer::attrs() const {
   return d->attrs;
 }
-
-v8::Local<v8::Value> Layer::attr(const std::string &name) const {
-  const auto it = d->attrs.find(name);
-  if (it == d->attrs.end())
-    return v8::Local<v8::Value>();
-  Isolate *isolate = Isolate::GetCurrent();
-  return v8pp::class_<ItemValue>::import_external(isolate,
-                                                  new ItemValue(it->second));
-}

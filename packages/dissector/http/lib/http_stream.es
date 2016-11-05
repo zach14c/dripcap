@@ -6,7 +6,7 @@ export default class Dissector {
   }
 
   analyze(packet, parentLayer, chunk) {
-    let payload = chunk.attr('payload').data;
+    let payload = chunk.attrs.payload.data;
     let body = payload.toString('utf8');
     let re = /(GET|POST) (\S+) (HTTP\/(0\.9|1\.0|1\.1))\r\n/;
     let m = body.match(re);
@@ -51,8 +51,8 @@ export default class Dissector {
       });
 
       layer.attrs.version = version;
-      layer.attrs.src = parentLayer.attr('src');
-      layer.attrs.dst = parentLayer.attr('dst');
+      layer.attrs.src = parentLayer.attrs.src;
+      layer.attrs.dst = parentLayer.attrs.dst;
       return new Layer(layer);
     }
   }

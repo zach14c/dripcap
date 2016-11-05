@@ -69,11 +69,6 @@ void StreamChunk::setAttr(const std::string &name, v8::Local<v8::Value> obj) {
   }
 }
 
-v8::Local<v8::Value> StreamChunk::attr(const std::string &name) const {
-  const auto it = d->attrs.find(name);
-  if (it == d->attrs.end())
-    return v8::Local<v8::Value>();
-  Isolate *isolate = Isolate::GetCurrent();
-  return v8pp::class_<ItemValue>::import_external(isolate,
-                                                  new ItemValue(it->second));
+std::unordered_map<std::string, ItemValue> StreamChunk::attrs() const {
+  return d->attrs;
 }
