@@ -10,7 +10,7 @@ import {
 export default class StatusView {
   async activate() {
     let pkg = await Package.load('main-view');
-    this.comp = new Component(`${__dirname}/../tag/*.tag`);
+    this.comp = await Component.create(`${__dirname}/../tag/*.tag`);
 
     let m = $('<div/>');
     this.view = riot.mount(m[0], 'status-view')[0];

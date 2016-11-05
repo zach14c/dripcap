@@ -4,7 +4,7 @@ import Panel from 'dripcap/panel';
 
 export default class MainView {
   async activate() {
-    this._comp = new Component(`${__dirname}/../less/*.less`);
+    this._comp = await Component.create(`${__dirname}/../less/*.less`);
     this.panel = new Panel();
     this._elem = $('<div id="main-view">').append(this.panel.root);
     this._elem.appendTo($('body'));

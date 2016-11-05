@@ -13,7 +13,7 @@ export default class PreferencesDialog {
     await Package.load('main-view');
     await Package.load('modal-dialog');
 
-    this.comp = new Component(`${__dirname}/../tag/*.tag`);
+    this.comp = await Component.create(`${__dirname}/../tag/*.tag`);
     this.panel = new Panel();
     let n = $('<div>').appendTo($('body'));
     this._view = riot.mount(n[0], 'preferences-dialog')[0];

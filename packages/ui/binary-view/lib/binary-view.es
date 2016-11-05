@@ -10,7 +10,7 @@ import {
 
 export default class BinaryView {
   async activate() {
-    this.comp = new Component(`${__dirname}/../tag/*.tag`);
+    this.comp = await Component.create(`${__dirname}/../tag/*.tag`);
     let pkg = await Package.load('main-view');
 
     let m = $('<div class="wrapper" />').attr('tabIndex', '0');

@@ -17,72 +17,67 @@ import {
 } from 'dripcap';
 
 export default class SessionDialog {
-  activate() {
-    return new Promise(res => {
-      KeyBind.bind('command+n', '!menu', 'core:new-session');
+  async activate() {
+    KeyBind.bind('command+n', '!menu', 'core:new-session');
 
-      this.captureMenu = function(menu, e) {
-        let left;
-        let action = name => () => Action.emit(name);
-        let capturing = (left = PubSub.get('core:capturing-status')) != null ? left.capturing : false;
-        menu.append(new MenuItem({
-          label: 'New Session',
-          accelerator: KeyBind.get('!menu', 'core:new-session'),
-          click: action('core:new-session')
-        }));
-        menu.append(new MenuItem({
-          type: 'separator'
-        }));
-        menu.append(new MenuItem({
-          label: 'Start',
-          enabled: !capturing,
-          click: action('core:start-sessions')
-        }));
-        menu.append(new MenuItem({
-          label: 'Stop',
-          enabled: capturing,
-          click: action('core:stop-sessions')
-        }));
-        return menu;
-      };
+    this.captureMenu = function(menu, e) {
+      let left;
+      let action = name => () => Action.emit(name);
+      let capturing = (left = PubSub.get('core:capturing-status')) != null ? left.capturing : false;
+      menu.append(new MenuItem({
+        label: 'New Session',
+        accelerator: KeyBind.get('!menu', 'core:new-session'),
+        click: action('core:new-session')
+      }));
+      menu.append(new MenuItem({
+        type: 'separator'
+      }));
+      menu.append(new MenuItem({
+        label: 'Start',
+        enabled: !capturing,
+        click: action('core:start-sessions')
+      }));
+      menu.append(new MenuItem({
+        label: 'Stop',
+        enabled: capturing,
+        click: action('core:stop-sessions')
+      }));
+      return menu;
+    };
 
-      Menu.registerMain('Capture', this.captureMenu);
+    Menu.registerMain('Capture', this.captureMenu);
 
-      let capturing = null;
-      PubSub.sub('core:capturing-status', (stat) => {
-        if (capturing !== stat.capturing) {
-          Menu.updateMainMenu();
-          capturing = stat.capturing;
-        }
+    let capturing = null;
+    PubSub.sub('core:capturing-status', (stat) => {
+      if (capturing !== stat.capturing) {
+        Menu.updateMainMenu();
+        capturing = stat.capturing;
+      }
+    });
+
+    this.comp = await Component.create(`${__dirname}/../tag/*.tag`);
+    await Package.load('main-view');
+    await Package.load('modal-dialog');
+
+    $(() => {
+      let n = $('<div>').addClass('container').appendTo($('body'));
+      this.view = riot.mount(n[0], 'session-dialog')[0];
+
+      KeyBind.bind('enter', '[riot-tag=session-dialog] .content', () => {
+        return $(this.view.tags['modal-dialog'].start).click();
       });
 
-      this.comp = new Component(`${__dirname}/../tag/*.tag`);
-      return Package.load('main-view').then(pkg => {
-        return Package.load('modal-dialog').then(pkg => {
-          return $(() => {
-            let n = $('<div>').addClass('container').appendTo($('body'));
-            this.view = riot.mount(n[0], 'session-dialog')[0];
+      Session.getInterfaceList().then(list => {
+        this.view.setInterfaceList(list);
+        this.view.update();
+      });
 
-            KeyBind.bind('enter', '[riot-tag=session-dialog] .content', () => {
-              return $(this.view.tags['modal-dialog'].start).click();
-            });
-
-            Session.getInterfaceList().then(list => {
-              this.view.setInterfaceList(list);
-              this.view.update();
-            });
-
-            Action.on('core:new-session', () => {
-              this.view.show();
-              this.view.update();
-              Session.getInterfaceList().then(list => {
-                this.view.setInterfaceList(list);
-                this.view.update();
-              });
-            });
-
-            return res();
-          });
+      Action.on('core:new-session', () => {
+        this.view.show();
+        this.view.update();
+        Session.getInterfaceList().then(list => {
+          this.view.setInterfaceList(list);
+          this.view.update();
         });
       });
     });
@@ -93,6 +88,6 @@ export default class SessionDialog {
     KeyBind.unbind('command+n', '!menu', 'core:new-session');
     KeyBind.unbind('enter', '[riot-tag=session-dialog] .content');
     this.view.unmount();
-    return this.comp.destroy();
+    this.comp.destroy();
   }
 }

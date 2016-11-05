@@ -24,7 +24,7 @@ export default class LogView {
   }
 
   async activate() {
-    this.comp = new Component(`${__dirname}/../tag/*.tag`);
+    this.comp = await Component.create(`${__dirname}/../tag/*.tag`);
     let pkg = await Package.load('main-view');
     this.base = $('<div class="wrapper" />').attr('tabIndex', '0');
     this.view = riot.mount(this.base[0], 'log-view')[0];

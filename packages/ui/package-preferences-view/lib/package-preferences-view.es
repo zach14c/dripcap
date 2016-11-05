@@ -7,7 +7,7 @@ import {
 
 export default class PackagePreferencesView {
   async activate() {
-    this.comp = new Component(`${__dirname}/../tag/*.tag`);
+    this.comp = await Component.create(`${__dirname}/../tag/*.tag`);
     let pkg = await Package.load('preferences-dialog');
 
     let m = $('<div class="wrapper"/>');
