@@ -201,7 +201,7 @@
   this.fieldRange = e => {
     let range = this.range.split(' ');
     range.pop();
-    range = range.concat(e.currentTarget.getAttribute('range').split(' '));
+    range = range.concat((e.currentTarget.getAttribute('range') || '').split(' '));
     PubSub.pub('packet-view:range', range);
   }
 
