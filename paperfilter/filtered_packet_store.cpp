@@ -61,13 +61,25 @@ void FilteredPacketStore::insert(uint32_t seq, bool match) {
     d->queue.erase(d->queue.begin(), end);
     for (const auto &pair : d->handlers) {
       if (pair.second)
-        pair.second(size());
+        pair.second(d->packets.size());
     }
   }
   uv_rwlock_wrunlock(&d->rwlock);
 }
 
-uint32_t FilteredPacketStore::size() const { return d->packets.size(); }
+uint32_t FilteredPacketStore::size() const {
+  uv_rwlock_rdlock(&d->rwlock);
+  uint32_t size = d->packets.size();
+  uv_rwlock_rdunlock(&d->rwlock);
+  return size;
+}
+
+uint32_t FilteredPacketStore::maxSeq() const {
+  uv_rwlock_rdlock(&d->rwlock);
+  uint32_t maxSeq = d->maxSeq;
+  uv_rwlock_rdunlock(&d->rwlock);
+  return maxSeq;
+}
 
 int FilteredPacketStore::addHandler(const std::function<void(uint32_t)> &cb) {
   static int handlerId = 0;

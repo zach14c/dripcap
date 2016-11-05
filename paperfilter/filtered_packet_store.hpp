@@ -15,6 +15,7 @@ public:
   std::vector<uint32_t> get(uint32_t start, uint32_t end) const;
   uint32_t get(uint32_t index) const;
   uint32_t size() const;
+  uint32_t maxSeq() const;
   int addHandler(const std::function<void(uint32_t)> &cb);
   void removeHandler(int id);
 

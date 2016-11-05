@@ -13,6 +13,7 @@
 #include "log_message.hpp"
 #include <nan.h>
 #include <thread>
+#include <chrono>
 #include <unordered_set>
 #include <uv.h>
 #include <v8pp/class.hpp>
@@ -23,6 +24,9 @@ using namespace v8;
 struct FilterContext {
   std::vector<std::unique_ptr<FilterThread>> threads;
   std::shared_ptr<FilterThread::Context> ctx;
+  std::chrono::time_point<std::chrono::system_clock> startTime =
+      std::chrono::system_clock::now();
+  uint32_t initialMaxSeq = 0;
 };
 
 class Session::Private {
@@ -102,8 +106,22 @@ Session::Private::Private() {
       v8pp::set_option(isolate, obj, "packets", d->store->maxSeq());
       Local<Object> filtered = Object::New(isolate);
 
-      for (const auto &pair : d->filterThreads) {
-        const FilterContext &context = pair.second;
+      for (auto &pair : d->filterThreads) {
+        FilterContext &context = pair.second;
+        if (context.initialMaxSeq > 0 &&
+            context.ctx->packets.maxSeq() >= context.initialMaxSeq) {
+          int ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::system_clock::now() - context.startTime)
+                       .count();
+          LogMessage msg;
+          msg.level = LogMessage::LEVEL_DEBUG;
+          msg.message = "Filter [" + pair.first + "]: " +
+                        std::to_string(context.initialMaxSeq) + "packets / " +
+                        std::to_string(ms / 1000.0) + "sec";
+          msg.domain = "filter";
+          d->log(msg);
+          context.initialMaxSeq = 0;
+        }
         v8pp::set_option(isolate, filtered, pair.first.c_str(),
                          context.ctx->packets.size());
       }
@@ -151,6 +169,7 @@ void Session::filter(const std::string &name, const std::string &filter) {
 
   if (!filter.empty()) {
     FilterContext &context = d->filterThreads[name];
+    context.initialMaxSeq = d->store->maxSeq();
     context.ctx = std::make_shared<FilterThread::Context>();
     context.ctx->store = d->store.get();
     context.ctx->filter = filter;
