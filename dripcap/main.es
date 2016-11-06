@@ -83,7 +83,7 @@ class Dripcap {
 
 const dripcap = new Dripcap();
 
-app.commandLine.appendSwitch('js-flags', '--harmony-async-await');
+app.commandLine.appendSwitch('js-flags', '--harmony-async-await --no-memory-reducer');
 
 app.on('quit', () => {
   if (Session.tmpDir) {
